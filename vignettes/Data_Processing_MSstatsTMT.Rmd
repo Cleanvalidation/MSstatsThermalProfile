@@ -1,0 +1,169 @@
+---
+title: "Data_Processing_MSstatsTMT"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, include=TRUE}
+devtools::load_all(".")
+```
+
+Library setup
+
+```{r setup}
+library(MSstatsThermalProfiler)
+library(MSstats)
+library(MSstatsConvert)
+library(MSstatsTMT)
+library(tidyr)
+library(stringr)
+```
+
+# Data Import
+
+### Import option 1: Read in your own file
+
+**Use getwd(your_working_directory) to get a folder where your PSM data is stored**
+
+```{r}
+#WD<-setwd("~/CS7290/MSstatsThermalProfiler/data")
+#PSMsample_HumanData<-readPSMs(WD)
+```
+
+### Import option 2: Use the example file
+
+**load the peptide spectrum match (PSM) example file into R**
+
+```{r}
+data("PSMsample_HumanData", package = "MSstatsThermalProfiler")
+
+```
+
+### Verify that the PSM data is loaded
+
+```{r}
+head(PSMsample_HumanData)
+```
+
+## Remove carrier channel from the data
+
+```{r}
+PSMsample_HumanData<-PSMsample_HumanData[,!stringr::str_detect(names(PSMsample_HumanData),"131C")]
+```
+
+# Annotation File Generation
+
+### Rename the columns from the PSM file and generate annotation file
+
+**Generate annotation file**
+
+```{r}
+pd_annotation<-Annotation2MSstatsTMT(PSMsample_HumanData,solvent="DMSO",temps=Channel2Temps_HumanData,reference="126")
+
+```
+
+# Data processing with MSstatsTMT
+
+1.  Import the data into MSStatsTMT
+
+```{r}
+
+processed.input <- MSstatsTMT::PDtoMSstatsTMTFormat(PSMsample_HumanData,
+                                                    pd_annotation,
+                                                    which.proteinid = "Master Protein Accessions",
+                                                    useNumProteinsColumn = TRUE,
+                                                    useUniquePeptide = FALSE,
+                                                    rmPSM_withfewMea_withinRun = TRUE,
+                                                    rmProtein_with1Feature = TRUE,
+                                                    summaryforMultipleRows = max,
+                                                    use_log_file = FALSE,
+                                                    append=FALSE,
+                                                    verbose=TRUE)
+```
+
+2.  Summarize the peptide data into proteins
+
+```{r}
+summarised.proteins <- proteinSummarization(data = processed.input,
+                                method = "msstats",
+                                global_norm = FALSE,
+                                reference_norm = TRUE,
+                                MBimpute=FALSE,
+                                use_log_file=FALSE,
+                                remove_norm_channel=TRUE)
+```
+
+3.  Create a contrast matrix to measure the average treatment effect
+
+    ```{r}
+
+    # perform contrast comparison
+    groups <- unique(summarised.proteins$FeatureLevelData$Condition)
+
+    #View the groups
+    groups
+
+    #Select the groups without Norm channel or carrier channel
+    groups<-groups[!stringr::str_detect(groups,"Norm")]
+
+    groups<-droplevels(groups,"Norm")
+
+
+    # 'Norm' will be removed during tesing and should be not considered in the contrast
+    comparison <-matrix(c(rep(-1/9,9),rep(1/9,9)),nrow=1)
+
+
+    comparison_names <- c("127N_vehicle",
+                          "127C_vehicle",
+                          "128N_vehicle",
+                          "128C_vehicle",
+                          "129N_vehicle",
+                          "129C_vehicle",
+                          "130N_vehicle",
+                          "130C_vehicle",
+                          "131N_vehicle",
+                          
+                          "127N_treated",
+                          "127C_treated",
+                          "128N_treated",
+                          "128C_treated",
+                          "129N_treated",
+                          "129C_treated",
+                          "130N_treated",
+                          "130C_treated",
+                          "131N_treated")
+
+    # Set the column names
+    colnames(comparison)<- comparison_names
+    # Set the names of each row
+    row.names(comparison)<- "treated-vehicle"
+
+    ```
+
+4.  Fit linear mixed models with groupComparisons from MSstatsTMT
+
+```{r}
+ATE<-groupComparisonTMT(
+  summarised.proteins,
+  contrast.matrix = comparison,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
+)
+```

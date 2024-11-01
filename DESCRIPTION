@@ -1,0 +1,49 @@
+Package: MSstatsThermalProfiler
+Title: Implements MSstatsTMT for Thermal Proteome Profiling Benchmarking
+Version: 0.0.0.9000
+Authors@R: 
+    person("Amanda", "Figueroa-Navedo", , "figueroa-navedo.a@northeastern.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    broom,
+    BiocManager,
+    dplyr,
+    furrr,
+    forcats,
+    future,
+    ggplot2,
+    ggrepel,
+    ggvenn,
+    lme4,
+    magrittr,
+    MASS,
+    nlme,
+    purrr,
+    rlang,
+    R.utils,
+    scam,
+    stats,
+    tidylog,
+    tidyr,
+    marginaleffects,
+    survival
+Depends: 
+    R (>= 2.10)
+LazyData: true
+Suggests: 
+    knitr,
+    posterior,
+    rmarkdown,
+    rstan,
+    testthat (>= 3.0.0)
+    TPP
+    MSstatsTMT
+    NPARC
+VignetteBuilder: knitr
+Config/testthat/edition: 3

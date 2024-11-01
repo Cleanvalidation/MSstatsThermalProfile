@@ -1,0 +1,303 @@
+oad
+
+---
+title: "Data_Processing_MSstatsTMT"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, include=TRUE}
+devtools::load_all(".")
+
+```
+
+Library setup
+
+```{r setup}
+
+library(MSstats)
+library(MSstatsConvert)
+library(MSstatsTMT)
+library(tidyr)
+library(stringr)
+library(TPP)
+library(NPARC)
+library(ggplot2)
+library(ggrepel)
+theme_set(theme_bw())
+
+```
+
+# Data Import
+
+# Import option 1: Read Protein file from folder
+
+```{r}
+CETSA_OnePot<-readxl::read_xlsx("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_Proteins.xlsx")
+colnames(CETSA_OnePot) <- stringr::str_replace_all(colnames(CETSA_OnePot),"[:punct:]| ",".")
+CETSA_OnePot_PSMs<-read.delim("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_PSMs.txt")
+colnames(CETSA_OnePot) <- stringr::str_replace_all(colnames(CETSA_OnePot),"[:punct:]| ",".")
+#save original data
+df<-CETSA_OnePot
+head(CETSA_OnePot)
+```
+
+
+# Annotation File Generation
+
+## Read annotation file
+
+```{r}
+CETSA_OnePot_annotation<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPP_annotation.csv")
+
+
+```
+
+# Generate annotation columns
+
+```{r}
+CETSA_OnePot$ProteinName<-CETSA_OnePot$Accession
+CETSA_OnePot$Protein<-CETSA_OnePot$Accession
+CETSA_OnePot_annotation$Condition<-stringr::str_remove(CETSA_OnePot_annotation$BioReplicate,"_rep[:digit:]")
+class(CETSA_OnePot_annotation$TechRepMixture)<-"numeric"
+CETSA_OnePot_annotation$TechRepMixture<-1
+CETSA_OnePot_annotation$Mixture<-1
+
+CETSA_OnePot_annotation<-CETSA_OnePot_annotation|>dplyr::distinct()
+CETSA_OnePot_annotation$Run<-"OnePot"
+CETSA_OnePot_annotation<-CETSA_OnePot_annotation|>dplyr::select(-Fraction)|>dplyr::distinct()
+head(CETSA_OnePot)
+```
+
+
+# Format original PD protein data to MSstatsTMT
+
+```{r}
+WD<-"~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/"
+PD_df<-read_cetsa_concentrations(WD,WD,Frac=TRUE,concentrations=set_concentration(16,concentrations=c(unique(CETSA_OnePot_annotation$Condition),NA),replicates=3),solvent="Control",CARRIER=FALSE)
+
+#Convert to msstatsTMT format
+
+PD_df<-PD_df|>dplyr::mutate(Protein=as.character(Accession),
+                            Run="OnePot",
+                            Abundance=log2(Abundance))|>
+  dplyr::select(Protein,Run,Abundance,Channel,Gene.Symbol)|>
+  dplyr::distinct()|>
+  dplyr::inner_join(CETSA_OnePot_annotation)
+                            
+MSstats_input<-list(ProteinLevelData=PD_df,FeatureLevelData=NA)                           
+```
+
+# Normalization with TPP CCR requires more than one plex
+
+```{r}
+data(hdacCCR_smallExample)
+tppccrData <- tppccrImport(configTable=hdacCCR_config, data = hdacCCR_data)
+head(hdacCCR_data$Panobinostat_1)
+```
+
+# GroupComparisonTMT DMSO OnePot vs 25x
+
+```{r}
+contrast.matrix<-matrix(ncol=5,nrow=1)
+colnames(contrast.matrix)<-unique(PD_df$Condition)
+contrast.matrix[1,]<-c(-1,0,0,0,1)
+rownames(contrast.matrix)<-c("DMSOvs25x")
+DIM_DMSOvs25x<-MSstatsTMT::groupComparisonTMT(MSstats_input,
+                   contrast.matrix=contrast.matrix,
+                   moderated=FALSE,
+                   adj.method="BH",
+                   remove_norm_channel = FALSE,
+                   remove_empty_channel = FALSE,
+                   save_fitted_models = TRUE,
+                   use_log_file = FALSE,
+                   append=FALSE)
+```
+
+Determine overlaps between MSstatsTMT and OnePot
+
+```{r}
+#read in protein file
+WD<-"~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/"
+h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
+setwd(WD)
+Proteins<-data.frame()
+Proteins<-lapply(h,function(x) readxl::read_xlsx(paste0(WD,x))) |> dplyr::bind_rows()|>dplyr::select(Accession,"Gene Symbol")|>dplyr::rename("GeneSymbol"="Gene Symbol")|>dplyr::distinct()
+#Read in human kinome (522 proteins)
+kinases<-read.csv(paste0(WD,"/HumanKinome_040920.csv"))
+#remove isoforms from UniProt accessions
+Proteins<-Proteins|>dplyr::mutate(Accession=stringr::str_remove(Accession,"-[[:digit:]]+"))|>dplyr::distinct()
+
+
+#join Uniprot IDs to original DF
+kinase_df<-kinases|>dplyr::inner_join(Proteins,relationship="many-to-many")|>dplyr::distinct()
+
+
+
+```
+
+NPARC
+
+```{r}
+
+TPPcurve_TPPprocesed <-readRDS("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/Reprocessed/Human_TPP_TPPprocesed.RDS")
+
+names(TPPcurve_TPPprocesed)<-c("TPP temp.","NPARC temp.","SCAM temp.","MSstatsTMT temp.")
+
+
+MSstat_hits<-unique(stringr::str_remove(as.character(DIM_DMSOvs25x$ComparisonResult$Protein[DIM_DMSOvs25x$ComparisonResult$adj.pvalue<0.05]),"-[:digit:]"))
+#remove shared protein accessions
+MSstat_hits<-MSstat_hits[!stringr::str_detect(MSstat_hits,";")]
+#add benchmarks to original full curve designs
+Benchmarks_external<-append(list("3a: TPP proc. 
+NPARC stat. mod."=TPPcurve_TPPprocesed$`NPARC temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: PD protein summary 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+png(filename = "VennNPARC_Fulltemp_vs_OnePot_TPPproc.png",
+     width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#FEC44F","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+dev.off() 
+
+```
+
+TPP
+
+```{r}
+
+#add benchmarks to original full curve designs
+Benchmarks_external<-append(list("3a: TPP proc. 
+TPP stat. mod."=TPPcurve_TPPprocesed$`TPP temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: PD protein summary 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+grDevices::png(filename = "VennTPP_Fulltemp_vs_OnePot_TPP.png",
+    width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#D95F0E","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+dev.off() 
+
+```
+
+SCAM
+
+```{r}
+Benchmarks_external<-append(list("3a: TPP proc.
+SCAM stat. mod."=TPPcurve_TPPprocesed$`SCAM temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: PD protein summary 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+png(filename = "VennSCAM_Fulltemp_vs_OnePot_TPPproc.png", width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#07fff8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+dev.off() 
+```
+
+MSstatsTMT
+
+```{r}
+Benchmarks_external<-append(list("3a: TPP proc. 
+MSstatsTMT stat. mod."=TPPcurve_TPPprocesed$`MSstatsTMT temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: PD protein summary 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+png(filename = "VennMSstatsTMT_Fulltemp_vs_OnePot_TPPproc.png",
+    width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+dev.off() 
+
+saveRDS(MSstat_hits,"PD_Proteinproc_OnePot.RDS")
+```
+
+# Profile plots
+
+```{r}
+MEK2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P36507")|>dplyr::group_split(Condition)
+MEK2_renamed<-lapply(MEK2,function(x) {
+  x$Condition<-as.character(x$Condition)
+  x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
+  x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
+                            return(x)})|>dplyr::bind_rows()
+ggplot(MEK2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_point()+ylab(expression(log[2]~Abundance))
+
+```
+
+box plots
+
+```{r}
+MEK2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P36507")|>dplyr::group_split(Condition)
+MEK2_renamed<-lapply(MEK2,function(x) {
+  x$Condition<-as.character(x$Condition)
+  x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
+  x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
+                            return(x)})|>dplyr::bind_rows()
+MEK2_plotOnePot<-ggplot(MEK2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_boxplot()+ylab(expression(log[2]~Abundance))+ggtitle("MAP2K2")
+saveRDS(MEK2_plotOnePot,"MEK2_allMethods_sig.RDS")
+MEK2_plotOnePot
+```
+
+Boxplots for Syntaxin 2
+
+```{r}
+STX2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P32856")|>dplyr::group_split(Condition)
+STX2_renamed<-lapply(STX2,function(x) {
+  x$Condition<-as.character(x$Condition)
+  x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
+  x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
+                            return(x)})|>dplyr::bind_rows()
+STX2_plotOnePot<-ggplot(STX2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_boxplot()+ylab(expression(log[2]~Abundance))+ggtitle("STX2")
+
+saveRDS(STX2_plotOnePot,"STX2_MSstats_sigOnePot.RDS")
+STX2_plotOnePot
+```
+
+```{r}
+CHK1<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="O14757")|>dplyr::group_split(Condition)
+CHK1_renamed<-lapply(CHK1,function(x) {
+  x$Condition<-as.character(x$Condition)
+  x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
+  x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
+                            return(x)})|>dplyr::bind_rows()
+CHK1_plotOnePot<-ggplot(CHK1_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_boxplot()+ylab(expression(log[2]~Abundance))+ggtitle("CHK1")
+
+saveRDS(CHK1_plotOnePot,"STX2_MSstats_sigOnePot.RDS")
+CHK1_plotOnePot
+```

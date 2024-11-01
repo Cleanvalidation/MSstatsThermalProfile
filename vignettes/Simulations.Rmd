@@ -1,0 +1,271 @@
+---
+title: "Simulations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MSstatsThermalProfiler)
+library(MSstatsTMT)
+```
+
+# MS-Stats Group Comparison
+
+First we need to convert the simulated data sets to the format used by MSstatsTMT
+
+```{r,eval=FALSE}
+
+sigmoid_truepositive_simdata_msstat = list(ProteinLevelData=Sim2MSstatsTMT(sigmoid_truepositive_simdata$ProteinLevelData))
+
+sigmoid_truenegative_simdata_msstat = list(ProteinLevelData=Sim2MSstatsTMT(sigmoid_truenegative_simdata$ProteinLevelData))
+
+#convert condition to factor
+
+sigmoid_truepositive_simdata_msstat$ProteinLevelData$Condition = as.factor(sigmoid_truepositive_simdata_msstat$ProteinLevelData$Condition)
+
+sigmoid_truenegative_simdata_msstat$ProteinLevelData$Condition = as.factor(sigmoid_truenegative_simdata_msstat$ProteinLevelData$Condition)
+
+```
+
+Next we make the contrast matrix to obtain the ATE (averaged over the channels/temps) in MS-Stats
+
+```{r,eval=FALSE}
+
+sigmoid_truepos_compmat = make_contrast_matrix(sigmoid_truepositive_simdata_msstat)
+
+sigmoid_trueneg_compmat = make_contrast_matrix(sigmoid_truenegative_simdata_msstat)
+
+```
+
+Now we are ready for groupComparisonsTMT(). We turn off logging and do not save the fitted model here. Also no moderation is used for the first go. 
+
+## True Positives Result MS-stats
+
+```{r,eval=FALSE}
+
+start=proc.time()
+sigmoid_truepos_MSstat_result = groupComparisonTMT(data=sigmoid_truepositive_simdata_msstat,contrast.matrix=sigmoid_truepos_compmat,
+                                                   moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+
+```
+
+
+```{r}
+
+start=proc.time()
+sigmoid_trueneg_MSstat_result = groupComparisonTMT(data=sigmoid_truenegative_simdata_msstat,contrast.matrix=sigmoid_trueneg_compmat,
+                                                   moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+
+```
+
+```{r}
+start=proc.time()
+sigmoid_truepos_MSstat_result_mod = groupComparisonTMT(data=sigmoid_truepositive_simdata_msstat,contrast.matrix=sigmoid_truepos_compmat,
+                                                   moderated=TRUE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+
+```
+
+```{r}
+
+start=proc.time()
+sigmoid_trueneg_MSstat_result_mod = groupComparisonTMT(data=sigmoid_truenegative_simdata_msstat,contrast.matrix=sigmoid_trueneg_compmat,
+                                                   moderated=TRUE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+
+```
+
+
+
+## Investigate False Negative and ATE and delta Tm relation 
+
+```{r}
+deltaTm_truepos = find_deltaTm(sigmoid_truepositive_simdata)
+```
+
+
+```{r,eval=FALSE}
+
+sigmoid_truepos_MSstat_result$ComparisonResult = sigmoid_truepos_MSstat_result$ComparisonResult |> dplyr::inner_join(sigmoid_truepositive_simdata$params,by="Protein") |> dplyr::mutate(ATE_bin = cut(ATE,breaks=c(seq(0,0.06,0.01),0.08,0.1,0.16)))
+
+```
+
+```{r}
+
+sigmoid_truepos_MSstat_result$ComparisonResult = sigmoid_truepos_MSstat_result$ComparisonResult |> dplyr::inner_join(deltaTm_truepos |> dplyr::select(Protein,delta_Tm),by="Protein")
+
+
+```
+
+
+```{r}
+sigmoid_truepos_MSstat_result$ComparisonResult |> group_by(ATE_bin) |> summarise(N=n(),Sens = mean(pvalue<0.05))
+```
+
+```{r}
+sigmoid_truepos_MSstat_result$ComparisonResult |> dplyr::mutate(delta_Tm_bin=cut(delta_Tm,breaks=c(-4,-1,0,1,2,3,5))) |> group_by(delta_Tm_bin) |> summarise(N=n(),Sens = mean(pvalue<0.05))
+```
+
+
+## Try with only treated vs vehicle, no channels
+
+```{r}
+sigmoid_truepositive_simdata_msstat_nochannel = sigmoid_truepositive_simdata_msstat
+
+sigmoid_truepositive_simdata_msstat_nochannel$ProteinLevelData = sigmoid_truepositive_simdata_msstat_nochannel$ProteinLevelData |>
+  mutate(Group=ifelse(stringr::str_detect(Group,"treated"),"treated","vehicle"),
+         Condition = Group)
+
+sigmoid_truenegative_simdata_msstat_nochannel = sigmoid_truenegative_simdata_msstat
+sigmoid_truenegative_simdata_msstat_nochannel$ProteinLevelData = sigmoid_truenegative_simdata_msstat_nochannel$ProteinLevelData |> mutate(Group=ifelse(stringr::str_detect(Group,"treated"),"treated","vehicle"),
+         Condition = Group)
+
+```
+
+
+```{r}
+
+start=proc.time()
+sigmoid_truepos_MSstat_result_nochannel = groupComparisonTMT(data=sigmoid_truepositive_simdata_msstat_nochannel,
+                                                   moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+```
+
+```{r}
+start=proc.time()
+sigmoid_trueneg_MSstat_result_nochannel = groupComparisonTMT(data=sigmoid_truenegative_simdata_msstat_nochannel,
+                                                   moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)
+end=proc.time()
+print(end-start)
+```
+
+# TPP Comparisons
+
+## Running TPP-NPARC implementation
+
+```{r}
+
+TPP_truepos_results = TPP_NPARC_calc(sigmoid_truepositive_simdata,method="NPARC",DF=5,df.temps=Channel2Temps_HumanData,CARRIER=TRUE)
+
+```
+
+
+```{r}
+TPP_trueneg_results = TPP_NPARC_calc(sigmoid_truenegative_simdata,method="NPARC",DF=5,df.temps=Channel2Temps_HumanData,CARRIER=TRUE)
+```
+
+
+```{r}
+compute_PPV = function(truepos_pvals,trueneg_pvals,prevalance=0.10){
+  sens = mean(truepos_pvals <= 0.05) #sensitivity is true positive rate 
+  spec = mean(trueneg_pvals > 0.05 ) #specificity is true negative rate
+  
+  PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance)))
+  result = dplyr::tibble(sens=sens,spec=spec,PPV=PPV)
+  return(result)
+}
+```
+
+
+## Partition by ATE and delta Tm
+
+```{r}
+
+deltaTm_truepos = find_deltaTm(sigmoid_truepositive_simdata)
+
+MSstat_truepos_results = sigmoid_truepos_MSstat_result$ComparisonResult |> dplyr::inner_join(sigmoid_truepositive_simdata$params,by="Protein") |> dplyr::mutate(ATE_bin = cut(ATE,breaks=c(seq(0,0.06,0.01),0.08,0.1,0.16)))
+
+MSstat_truepos_results = MSstat_truepos_results |> dplyr::inner_join(deltaTm_truepos |> dplyr::select(Protein,delta_Tm),by="Protein")
+
+```
+
+```{r}
+MSstat_truepos_results |> dplyr::group_by(ATE_bin) |> dplyr::summarise(N=dplyr::n(),sens = mean(pvalue<0.05)) |> dplyr::ungroup() |>
+  dplyr::mutate(spec = mean(sigmoid_trueneg_MSstat_result$ComparisonResult$pvalue>0.05), prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+```
+
+
+```{r}
+MSstat_truepos_results |> dplyr::mutate(delta_Tm_bin=cut(delta_Tm,breaks=c(-4,-1,0,1,2,3,5))) |> dplyr::group_by(delta_Tm_bin) |> dplyr::summarise(N=dplyr::n(),sens = mean(pvalue<0.05)) |> dplyr::ungroup() |>
+  dplyr::mutate(spec = mean(sigmoid_trueneg_MSstat_result$ComparisonResult$pvalue>0.05), prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+```
+
+```{r}
+TPP_truepos_results = TPP_truepos_results |> dplyr::rename(Protein=uniqueID) |> dplyr::inner_join(sigmoid_truepositive_simdata$params,by="Protein") |> dplyr::mutate(ATE_bin = cut(ATE,breaks=c(seq(0,0.06,0.01),0.08,0.1,0.16)))
+
+TPP_truepos_results = TPP_truepos_results |> dplyr::inner_join(deltaTm_truepos |> dplyr::select(Protein,delta_Tm),by="Protein")
+```
+
+```{r}
+TPP_truepos_results |> dplyr::group_by(ATE_bin) |> dplyr::summarise(N=dplyr::n(),sens = mean(p_NPARC<0.05)) |> dplyr::ungroup() |>
+  dplyr::mutate(spec = mean(TPP_trueneg_results$p_NPARC>0.05), prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+```
+
+
+
+```{r}
+TPP_truepos_results |> dplyr::mutate(delta_Tm_bin=cut(delta_Tm,breaks=c(-4,-1,0,1,2,3,5))) |> dplyr::group_by(delta_Tm_bin) |> dplyr::summarise(N=dplyr::n(),sens = mean(p_NPARC<0.05)) |> dplyr::ungroup() |>
+  dplyr::mutate(spec = mean(TPP_trueneg_results$p_NPARC>0.05), prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+```
+
+## Stratify by Corr
+
+```{r}
+
+MSstat_trueneg_results = sigmoid_trueneg_MSstat_result$ComparisonResult |> dplyr::inner_join(sigmoid_truenegative_simdata$params,by="Protein")
+
+
+MSstat_truepos_results_bycorr  = MSstat_truepos_results |> dplyr::group_by(rho) |> dplyr::summarise(N=dplyr::n(),sens = mean(pvalue<0.05)) 
+
+MSstat_trueneg_results_bycorr  = MSstat_trueneg_results |> dplyr::group_by(rho) |> dplyr::summarise(N=dplyr::n(),spec = mean(pvalue>0.05)) 
+
+MSstat_results_bycorr = MSstat_truepos_results_bycorr |> dplyr::inner_join(MSstat_trueneg_results_bycorr,by="rho") |> dplyr::select(-N.y) |> dplyr::mutate(prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+
+MSstat_results_bycorr
+
+```
+
+```{r}
+
+TPP_trueneg_results = TPP_trueneg_results |> dplyr::rename(Protein=uniqueID) |> dplyr::inner_join(sigmoid_truenegative_simdata$params,by="Protein")
+
+```
+
+
+
+```{r}
+
+TPP_truepos_results_bycorr = TPP_truepos_results |> dplyr::group_by(rho) |> dplyr::summarise(N=dplyr::n(),sens = mean(p_NPARC<0.05)) 
+
+TPP_trueneg_results_bycorr  = TPP_trueneg_results |> dplyr::group_by(rho) |> dplyr::summarise(N=dplyr::n(),spec = mean(p_NPARC>0.05)) 
+
+
+TPP_results_bycorr = TPP_truepos_results_bycorr |> dplyr::inner_join(TPP_trueneg_results_bycorr,by="rho") |> dplyr::select(-N.y) |> dplyr::mutate(prevalance = 0.10,
+                PPV = (sens*prevalance)/((sens*prevalance) + (1-spec)*((1-prevalance))))
+
+TPP_results_bycorr
+
+```
+
