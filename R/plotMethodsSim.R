@@ -1,4 +1,4 @@
-plotMethods<-function(df,labels=NA,processing="",temps=c("53.8","57.1","60.4")){
+plotMethodsSim<-function(df,labels=NA,processing="",temps=c("53.8","57.1","60.4")){
 
   if(!length(unique(df$Condition))==2){
     df$Condition<-stringr::str_extract(stringr::str_extract_all(stringr::str_to_lower(df$Condition),"_[[:lower:]]+"),"[[:lower:]]+")

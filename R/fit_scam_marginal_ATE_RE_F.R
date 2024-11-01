@@ -30,7 +30,7 @@ fit_scam_marginal_ATE_RE_F= function(accession_data){
   model1<-purrr::map(model,function(x) x[1])
   model2<-purrr::map(model,function(x) x[2])#this is the actual model
 
-  #dTm<-furrr::future_map(model,function(x) grid_search_Tm(x[[2]])) |> dplyr::bind_rows()
+
   model2<-purrr::map(model2,function(x) x[[1]])
   model2<-model2#%>% purrr::keep(function(x) any(class(x)=="scam"))
   ATE<-model2|>purrr::keep(function(x) any(class(x)=="scam"))
@@ -44,8 +44,7 @@ fit_scam_marginal_ATE_RE_F= function(accession_data){
 
 
   ATE=check
-  #ATE = cbind(ATE,dTm) #get Tm's
-  #ATE$dTm=ifelse(!is.na(ATE$Tm_treatment)&!is.na(ATE$Tm_vehicle),ATE$Tm_treatment-ATE$Tm_vehicle,NA)
+
   return(ATE)
 
 }

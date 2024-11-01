@@ -29,7 +29,7 @@ read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(
 
   Proteins<-readProteins(protein_path)
   PSMs<-readPSMs(peptide_path)
-
+  #shorten spectrum.file column
   if(any(stringr::str_detect(names(PSMs),"Spectrum"))){
     PSMs$Spectrum.File<-stringr::str_remove_all(PSMs$Spectrum.File,"[[:digit:]]+.raw")
     PSMs$Spectrum.File<-stringr::str_remove(PSMs$Spectrum.File,"Fx[[:digit:]]+")
@@ -73,7 +73,15 @@ read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(
     Mapping_PSMs<-PSMs|>
       dplyr::select(Spectrum.File,File.ID)|>
       dplyr::distinct()|>
-      dplyr::mutate(File.ID=stringr::str_extract(File.ID,"[:upper:][[:digit:]]+"))|>dplyr::distinct()
+      dplyr::mutate(File.ID=stringr::str_extract(File.ID,"[:upper:][[:digit:]]+"),
+                                                 treatment=ifelse(
+                                                   stringr::str_detect(Spectrum.File,solvent),
+                                                                  "vehicle","treated"))|>
+      dplyr::group_by(treatment)|>
+      dplyr::mutate(TechRepMixture=seq(1,dplyr::n()),
+                    Experiment = paste0(treatment,"_",TechRepMixture))|>
+      dplyr::distinct()|>
+      dplyr::ungroup()
     Proteins<-Proteins |>
       dplyr::filter(!is.na(File.ID))|>
       dplyr::inner_join(temps, by ="Channel")|>
@@ -115,8 +123,7 @@ read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(
       dplyr::mutate(File.ID=stringr::str_extract(File.ID,"[:upper:][[:digit:]]+"),
                     treatment=ifelse(stringr::str_detect(Spectrum.File,solvent),"vehicle","treated"))|>
       dplyr::group_by(treatment)|>
-      dplyr::distinct()|>
-      dplyr::mutate(TechRepMixture = seq(1,dplyr::n()),
+      dplyr::mutate(TechRepMixture=seq(1,dplyr::n()),
                     Experiment = paste0(treatment,"_",TechRepMixture))
     Proteins<-Proteins |>
       dplyr::distinct()|>
@@ -146,7 +153,8 @@ read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(
 
   Proteins$CC <-ifelse(stringr::str_detect(Proteins$Spectrum.File,solvent),0,1)
   if(any(stringr::str_detect(Proteins$Spectrum.File,solvent))){
-    Proteins$Condition<-as.factor(ifelse(stringr::str_detect(Proteins$Spectrum.File,solvent),"vehicle","treated"))
+    Proteins$treatment<-as.factor(ifelse(stringr::str_detect(Proteins$Spectrum.File,solvent),"vehicle","treated"))
+    Proteins$Condition<-paste0(Proteins$Channel,"_",Proteins$treatment)
   }
   Proteins$Subject<-Proteins$File.ID
   if(any(names(Proteins)=="BioReplicate")){
@@ -157,9 +165,11 @@ read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(
   Proteins<-Proteins|>
     dplyr::left_join(temps)|>
     dplyr::group_by(Accession,File.ID)|>
+    #check missing channels in plex
     dplyr::mutate(missing_channels=sum(is.na(Abundance)))|>
     dplyr::ungroup()|>
     dplyr::distinct()
+
   return(Proteins)
 
 }

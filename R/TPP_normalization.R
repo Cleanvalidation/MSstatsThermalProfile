@@ -1,20 +1,32 @@
-TPP_normalization<-function(x,TPPfilters,temps,reference,CARRIER=FALSE){
-  if(any(names(x)=="Abundance")){
-    x$value<-x$Abundance
+TPP_normalization<-function(pd_protein_data,TPPfilters,temps,reference,CARRIER=FALSE){
+  if(any(names(pd_protein_data)=="Abundance")){
+    pd_protein_data$value<-pd_protein_data$Abundance
   }
-  x<-x|>dplyr::group_by(Accession,File.ID,Condition)|>
-    dplyr::mutate(value=suppressWarnings(value/mean(value[Channel==reference])))|>
-    dplyr::mutate(Abundance=value,
-                  uniqueID=Accession)|>
+  #normalize data
+  #if the condition is set to MSstats format channel_treatment
+  if(any(stringr::str_detect(pd_protein_data$Condition,"[:punct:]"))){
+    pd_protein_data<-pd_protein_data|>dplyr::group_by(Accession,File.ID,treatment)|>
+      dplyr::mutate(value=suppressWarnings(value/mean(value[Channel==reference])),
+                    uniqueID=Accession,
+                    Subject=Experiment)|>
+      dplyr::distinct()|>
+      dplyr::ungroup()
+  }else{ #if the condition is set to TPP format (e.g. vehicle or treated)
+  pd_protein_data<-pd_protein_data|>dplyr::group_by(Accession,File.ID,Condition)|>
+    dplyr::mutate(value=suppressWarnings(value/mean(value[Channel==reference])),
+                  uniqueID=Accession,
+                  Subject=Experiment)|>
     dplyr::distinct()|>
     dplyr::ungroup()
+  }
   #rename data to MSStatsTMT format
   start=proc.time()
-  Data<-MSstats_format_TO_TPP(x,temps=temps,CARRIER=CARRIER)
+  Data<-MSstats_format_TO_TPP(pd_protein_data,temps=temps,CARRIER=CARRIER)
   end=proc.time()
   print(paste0("Renamed data to match TPP format in ",as.numeric(signif((end-start)[1],2))," seconds"))
 
-  Data$TPPdata<-lapply(Data$TPPdata,function(x) x|>dplyr::select(-uniqueID)|>dplyr::mutate(gene_name=as.character(gene_name)))
+  Data$TPPdata<-lapply(Data$TPPdata,function(x) x|>dplyr::select(-uniqueID)|>
+                         dplyr::mutate(gene_name=as.character(gene_name)))
   #Check column order
   data(hdacTR_smallExample)
   order_names<-names(hdacTR_config)

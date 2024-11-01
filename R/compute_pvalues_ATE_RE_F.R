@@ -1,25 +1,24 @@
 #Compute p-values from ATE using SCAM with RE
-compute_pvalues_ATE_RE_F = function(fulldata,workers=6){
-  if(any(names(fulldata)=="Protein")){
-    fulldata$Accession=fulldata$Protein
+compute_pvalues_ATE_RE_F = function(proteins,workers=6){
+  if(any(names(proteins)=="Protein")){
   }
-  if(any(names(fulldata)=="Condition")&!any(names(fulldata)=="treatment")){
-    fulldata$treatment=as.factor(fulldata$Condition)
+  if(any(names(proteins)=="Condition")&!any(names(proteins)=="treatment")){
+    proteins$treatment=as.factor(proteins$Condition)
   }
-  if(any(names(fulldata)=="Abundance")&!any(names(fulldata)=="I")){
-    fulldata$I=fulldata$Abundance
+  if(any(names(proteins)=="Abundance")&!any(names(proteins)=="I")){
+    proteins$I=proteins$Abundance
   }
-  if(any(names(fulldata)=="Subject")&!any(names(fulldata)=="sample_id")){
-    fulldata$sample_id=fulldata$Subject
+  if(any(names(proteins)=="Subject")&!any(names(proteins)=="sample_id")){
+    proteins$sample_id=proteins$Subject
   }
-  if(!any(names(fulldata)=="sample_name")&any(names(fulldata)=="Run")){
-    fulldata$sample_name=stringr::str_extract(unique(fulldata$Run)[length(unique(fulldata$Run))],"[[:lower:]]+")
+  if(!any(names(proteins)=="sample_name")&any(names(proteins)=="Run")){
+    proteins$sample_name=stringr::str_extract(unique(proteins$Run)[length(unique(proteins$Run))],"[[:lower:]]+")
 
   }else{
-    fulldata$sample_name<-"Simulation"
+    proteins$sample_name<-"Simulation"
   }
 
-  original_result = fit_scam_marginal_ATE_RE_F(fulldata) |> dplyr::bind_rows()
+  original_result = fit_scam_marginal_ATE_RE_F(proteins) |> dplyr::bind_rows()
   original_result$F_adjBH=stats::p.adjust(original_result$F_pvalue,method="BH")
   original_result$ATE_padjBH=stats::p.adjust(original_result$p.value,method="BH")
 

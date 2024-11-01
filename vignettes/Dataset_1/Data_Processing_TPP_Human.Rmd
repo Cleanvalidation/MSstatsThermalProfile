@@ -50,7 +50,7 @@ WD<-"~/work/ivanovlab/figueroa-navedo.a/data/Human"
 #WD<-"E:/internal_dataset/PD_files"
 h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
 
-PD_df<-read_cetsa(WD,WD,Frac=TRUE,temps=set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68)),solvent="DMSO",CARRIER=TRUE)
+PD_df<-MSstatsThermalProfiler::read_cetsa(WD,WD,Frac=TRUE,temps=set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68)),solvent="DMSO",CARRIER=TRUE)
 head(PD_df)
 ```
 ###Generate annotation file

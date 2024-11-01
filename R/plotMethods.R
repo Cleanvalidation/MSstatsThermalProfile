@@ -15,7 +15,6 @@ plotMethods<-function(target_protein,labels=NA,processing="",temps=c("53.8","57.
 
   target_protein1<-target_protein1|>
     dplyr::mutate(shape=ifelse(temperature==min(temperature,na.rm=TRUE),"reference","included"))
-
   if(processing=="MSstatsTMT"){#If this is MSstatsTMT processed, unlog and ratio to reference channel is needed for benchmark
     target_protein1$Condition<-target_protein1$treatment
     target_protein1$Experiment<-paste0(target_protein1$treatment,"_",target_protein1$TechRepMixture)
@@ -34,15 +33,18 @@ plotMethods<-function(target_protein,labels=NA,processing="",temps=c("53.8","57.
     target_protein1$Condition<-stringr::str_extract(stringr::str_to_lower(as.character(target_protein1$Experiment)),"[[:lower:]]+")
     target_protein1$treatment<-target_protein1$Condition
 
+  }else if(any(target_protein1$Condition=="Norm")){
+    target_protein1$Condition<-target_protein1$treatment
+    target_protein1$Experiment<-target_protein1$treatment
   }
 
 
-
+  #set labels for the plots
   l<-labels
   num<-length(unique(target_protein1$Abundance|>na.omit()))
   target_protein1$num<-num
-  if(any(is.na(labels))){
-    l<-"AUTO"
+  if(class(labels)=="function"){
+     l<-"AUTO"
   }
   target_protein1$shape<-as.factor(ifelse(target_protein1$temperature==min(target_protein1$temperature,na.rm=T),"reference","included"))
   if(!any(names(target_protein1)=="Accession")&any(names(target_protein1)=="uniqueID")){
@@ -197,6 +199,7 @@ plotMethods<-function(target_protein,labels=NA,processing="",temps=c("53.8","57.
   Protein<-list(ProteinLevelData=target_protein[!target_protein$Condition=="Norm",],FeatureLevelData=NA)
 
   comparison<-make_contrast_matrix(Protein,temps=temps)
+
   if(!any(names(target_protein)=="model")){
     MSstat_result = groupComparisonThermalProfiling(
       Protein,
@@ -320,7 +323,7 @@ plotMethods<-function(target_protein,labels=NA,processing="",temps=c("53.8","57.
                y=min(target_protein$Abundance,na.rm=T),size=5)
   }
 
-  y<-cowplot::get_legend(MSstat)
+  y<-cowplot::get_plot_component(MSstat, 'guide-box-bottom', return_all = TRUE)
   plotS2<-list(TPP,NPARC,SCAM,MSstat)
   if(!any(stringr::str_detect(unique(Protein$temperature),"67"))){
     temps<-as.numeric(c(unique(Protein$temperature),"67"))

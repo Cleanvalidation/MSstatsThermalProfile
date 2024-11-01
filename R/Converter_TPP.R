@@ -16,7 +16,8 @@ Converter_TPP<-function(x,CARRIER=FALSE){
     x$sample_id<-x$Subject
   }
   if(any(names(x)=="sample_id"&any(names(x)=="treatment"))){
-    mappingMSstat<-x|>dplyr::select(Condition,sample_id,treatment,TechRepMixture)|>
+    mappingMSstat<-x|>
+      dplyr::select(Condition,sample_id,treatment,TechRepMixture)|>
       dplyr::distinct()|>
       dplyr::group_by(Condition,treatment)|>
       dplyr::mutate(Subject=paste0(Condition,"_",TechRepMixture),
@@ -43,6 +44,7 @@ Converter_TPP<-function(x,CARRIER=FALSE){
   }else if(!any(names(x)=="Experiment")){
     x$Experiment<-paste0(x$treatment,"_",x$TechRepMixture)
     x$Mixture<-x$Experiment
+    x$Subject<-x$Mixture
   }
   if(any(isTRUE(class(x)))=="list"&any(stringr::str_detect(names(x),"TPPdata"))){
     x<-x$TPPdata

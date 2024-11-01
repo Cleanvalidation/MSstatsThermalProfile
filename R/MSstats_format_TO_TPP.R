@@ -7,19 +7,20 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
       dplyr::group_by(treatment)|>
       dplyr::mutate(TechRepMixture=seq(1,dplyr::n()))
     if(!any(names(summarisedProteins)=="Experiment")){
-    summarisedProteins<- summarisedProteins |> dplyr::right_join(labels) |>
-      dplyr::mutate(Experiment = paste0(treatment,"_",TechRepMixture))
+      summarisedProteins<- summarisedProteins |> dplyr::right_join(labels) |>
+        dplyr::mutate(Experiment = paste0(treatment,"_",TechRepMixture))
     }else{
       summarisedProteins <- summarisedProteins |>dplyr::right_join(labels)
     }
   }
+  #rename protein columns into one format
   if(!any(names(summarisedProteins)=="uniqueID")&any(names(summarisedProteins)=="Accession")){
     summarisedProteins$uniqueID<-summarisedProteins$gene_name<-summarisedProteins$Accession
   }else if(!any(names(summarisedProteins)=="uniqueID")&any(names(summarisedProteins)=="Protein")){
     summarisedProteins$uniqueID<-summarisedProteins$gene_name<-summarisedProteins$Protein
   }
 
-  #deal with the carrier channel assuming it is in 131C
+  #remove carrier channel assuming it is in 131C and rename 131N to 131
   if(any(stringr::str_detect(summarisedProteins$Channel,"131N"))&isTRUE(CARRIER)){
     summarisedProteins$Channel<-summarisedProteins$Channel
     summarisedProteins$Channel<-ifelse(stringr::str_detect(summarisedProteins$Channel,"131N"),"131",summarisedProteins$Channel)
@@ -35,9 +36,7 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
   if(any(names(summarisedProteins)=="Channel")&!any(names(summarisedProteins)=="temperature")){
     summarisedProteins<-summarisedProteins|>dplyr::inner_join(temps)
   }
-  # if(any(stringr::str_detect(summarisedProteins$uniqueID[1],"SubSD"))){
-  #   summarisedProteins$uniqueID<-summarisedProteins$Protein<-summarisedProteins$Accession<-stringr::str_extract(as.character(summarisedProteins$uniqueID),"_[[:digit:]]+_summarisedProteins_[[:digit:]]+|_[:digit:].[[:digit:]]+_summarisedProteins_[[:digit:]]+")
-  # }
+
   x<-summarisedProteins
 
   x<-Converter_TPP(x,CARRIER=CARRIER)
@@ -48,11 +47,11 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
 
 
   Orig_data$Channel<-ifelse(stringr::str_detect(Orig_data$Channel,"C"),
-                             stringr::str_replace(Orig_data$Channel,"C","H"),
-                             Orig_data$Channel)
+                            stringr::str_replace(Orig_data$Channel,"C","H"),
+                            Orig_data$Channel)
   Orig_data$Channel<-ifelse(stringr::str_detect(Orig_data$Channel,"N"),
-                             stringr::str_replace(Orig_data$Channel,"N","L"),
-                             Orig_data$Channel)
+                            stringr::str_replace(Orig_data$Channel,"N","L"),
+                            Orig_data$Channel)
   Orig_data<-Orig_data |>dplyr::mutate(sample_id=as.character(sample_id))|>dplyr::distinct()
 
   #pivot original data to wide and preface rel_fc to channels
@@ -100,6 +99,7 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
   #config<-pivot_x |> dplyr::inner_join(config)
   config$treatment<-stringr::str_remove(stringr::str_extract(stringr::str_to_lower(config$Experiment),"[[:lower:]]+_"),"_")
   config$Condition<-ifelse(stringr::str_detect(stringr::str_to_lower(config$treatment),"vehicle"),"Vehicle","Treatment")
+
   config$ComparisonVT1<-NA
   config$ComparisonVT2<-NA
 
