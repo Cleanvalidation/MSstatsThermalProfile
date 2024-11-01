@@ -53,11 +53,11 @@ theme_set(theme_bw())
 **Use WD\<-your_working_directory to get a folder where your PSM data is stored**
 
 ```{r}
-#WD<- "E:/internal_dataset/Excel/PSM"
-WD<- "~/work/ivanovlab/figueroa-navedo.a/data/Human"
-h<-list.files(WD,pattern="PSMs")|>as.list()
 
-df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(WD,"/",x),.name_repair = "universal")) |> dplyr::bind_rows()
+#workingDirectory<- "~/work/ivanovlab/figueroa-navedo.a/data/Human"
+# h<-list.files(workingDirectory,pattern="PSMs")|>as.list()
+# 
+# df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(WD,"/",x),.name_repair = "universal")) |> dplyr::bind_rows()
 ```
 
 ### Import option 2: Use the example file
@@ -65,8 +65,9 @@ df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(WD,"/",x),.name_repai
 **load the peptide spectrum match (PSM) example file into R**
 
 ```{r}
-#data("PSMsample_HumanData", package = "MSstatsThermalProfiler")
-
+data("PSMsample_HumanData", package = "MSstatsThermalProfiler")
+df<-PSMsample_HumanData
+names(df)<-stringr::str_replace_all(names(df)," ",".")
 ```
 
    # Annotation File Generation
@@ -260,7 +261,7 @@ We start by using the traditional TPP method
 ```{r}
 
 #since the MSstats protein summarization output does not have the temperature data, we need to perform an inner join to add this 
-proteins<-summarised.proteins$ProteinLevelData |> dplyr::mutate(Channel=as.character(Channel),Mixture=as.character(Mixture))|>
+MSstatsproteins<-summarised.proteins$ProteinLevelData |> dplyr::mutate(Channel=as.character(Channel),Mixture=as.character(Mixture))|>
   as.data.frame()
 #inner join annotation file to get back the subject column
 
@@ -269,11 +270,11 @@ reps<-pd_annotation$annotation|>
   dplyr::distinct()
 
 
-proteins<-proteins|>
+MSstatsproteins<-MSstatsproteins|>
   as.data.frame()|>
   dplyr::inner_join(reps,by="Mixture")
 
-proteins1<-proteins|>dplyr::mutate(
+proteins1<-MSstatsproteins|>dplyr::mutate(
 shape=ifelse(temperature==min(temperature,na.rm=TRUE),"reference","included"))|>dplyr::distinct()
 #Since MSstats outputs are log2 transformed, NPARC runs faster by ratioing the data from all temperatures over the baseline temperature
 
@@ -281,7 +282,7 @@ proteins1<-proteins1|>
   as.data.frame()|>
   dplyr::group_by(Protein,Run,Mixture)|>
   dplyr::group_split()
-
+#unlog protein data
 proteins1<-proteins1|>
   lapply(function(x) x|>
   dplyr::mutate(Abundance=2^Abundance))
@@ -502,12 +503,12 @@ if(length(Benchmarks_MSstatsTMTproc_p$`NPARC stat. model`)==0){
 }
 TPP_human<-TPP_human_results_F|>dplyr::filter(uniqueID %in% c("P36507","Q02750"))
 
-SCAM_human<-DIM_Human_SCAM|>dplyr::filter(Accession %in% c("P36507","Q02750"))
+SCAM_human<-DIM_Human_SCAM|>dplyr::select(Accession,ATE_padjBH,p.value)|>dplyr::distinct()|>dplyr::filter(Accession %in% c("P36507","Q02750"))
 
 MSstat_human<-DIM_late$ComparisonResult|>dplyr::filter(Protein%in%c("P36507","Q02750"))
 
 
-Stat_mod<-data.frame(Protein=MSstat_human$Protein,NPARC_adjpval=formatC(NPARC_human$pAdj, format = "e", digits = 2),TPP_adjpval=formatC(TPP_human$p_adj_NPARC,format = "e", digits = 2),SCAM_adjpval=formatC(SCAM_human$ATE_padjBH,format = "e", digits = 2),MSstats_adjpval=formatC(MSstat_human$adj.pvalue,format = "e", digits = 2))
+Stat_mod<-data.frame(Protein=MSstat_human$Protein,NPARC_adjpval=formatC(NPARC_human$pAdj, format = "e", digits = 2),TPP_adjpval=formatC(TPP_human$p_adj_NPARC,format = "e", digits = 2),SCAM_adjpval=NA,MSstats_adjpval=formatC(MSstat_human$adj.pvalue,format = "e", digits = 2))
 
 
 
@@ -525,13 +526,13 @@ fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(mod
 # Plot the curves
 
 ```{r}
-targets<-proteins|>as.data.frame()|>dplyr::filter(Protein%in% c("P36507","Q02750"))|>dplyr::mutate(Accession=Protein)|>dplyr::inner_join(Stat_mod)|>dplyr::group_by(Accession)|>dplyr::group_split()
+targets<-MSstatsproteins|>as.data.frame()|>dplyr::filter(Protein%in% c("P36507","Q02750"))|>dplyr::mutate(Accession=Protein)|>dplyr::inner_join(Stat_mod)|>dplyr::group_by(Accession)|>dplyr::group_split()
 
 DIM_targets<-DIM_late$FittedModel[which(names(DIM_late$FittedModel) %in% c("P36507","Q02750"))]
 fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))
 
 nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
-target_curves<-lapply(fitted_MSstat,function(x){plotMethods(x,temps=c("53.8","57.1","60.4"),labels=c("E","F","G","H"),processing="MSstatsTMT",fit="Spline")
+target_curves<-lapply(fitted_MSstat,function(x){plotMethods(x,temps=c("53.8","57.1","60.4"),labels=c("E","F","G","H"),processing="MSstatsTMT", fit="Spline")
 })
 names(target_curves)<-nam
 #get path
@@ -543,8 +544,8 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 target_curves$Q02750
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_spline_Q02750.tiff")
 ```
-
-## Compare Venn Diagrams between processing
+#Reproduce manuscript figures (sample files will not work with this)
+## Compare Venn Diagrams between processing###
 
 ```{r}
 
@@ -673,77 +674,4 @@ results_filtered<-data.frame(processing=rep("MSstatsTMT",3),"stat. model"=rep("M
                               sum(ATE_middle$ComparisonResult$adj.pvalue<0.05&ATE_middle$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750")),sum(ATE_early$ComparisonResult$adj.pvalue<0.05&ATE_early$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750"))))
                                                                                                          results_filtered     
 ```
-
-# Volcano plots for MSstatsTMT
-
-```{r}
-f<-DIM$ComparisonResult
-f$diffexpressed <- "Not Shifted"
-    f$diffexpressed[f$adj.pvalue < 0.05] <- "Shifted adj. pVal < 0.05"
-    f$diffexpressed[f$adj.pvalue < 0.01] <- "Shifted adj. pVal < 0.01"
-    f$diffexpressed<-as.factor(f$diffexpressed)
-    f$targets<-NA
-    f$delabel <- NA
-    f$others<-NA
-    
-    f$others[which(f$adj.pvalue<0.01)]<-as.character(f$Protein[which(f$adj.pvalue<0.01)])
-    f$targets <-ifelse(f$Protein %in%"P36507","P36507",ifelse(f$Protein %in% "Q02750","Q02750",NA))
-    f$delabel[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")] <- as.character(f$Protein[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")])
-    flevels<-data.frame(colors=c("#762a83","#b35806","#1b7837"),
-                        labels=c("Shifted adj. pVal < 0.05","Not Shifted","Shifted adj. pVal < 0.01"))
-    flevels<-flevels %>% dplyr::filter(labels %in% unique(f$diffexpressed))
-
-ggplot(f,mapping=aes(x=log2FC,y=log10(adj.pvalue),color=diffexpressed))+geom_point()+xlim(-2,2)+xlab("DIM")+scale_y_reverse()+geom_label_repel(f,mapping=aes(label=targets),color="black",max.overlaps = getOption("ggrepel.max.overlaps", default = 10),
-nudge_x = 3,
-nudge_y=1,
-force = 3)+ylab("log(adj.pvalue)")+xlab("DIM")+theme(text=element_text(size=18))
-
-```
-
-```{r}
-data.frame(Method="MsstatsTMT","Not.Shifted"=sum(as.numeric(f$diffexpressed=="Not Shifted")),"Shifted"=sum(as.numeric(!f$diffexpressed=="Not Shifted")))
-```
-
-# Volcano plots for SCAM
-
-```{r}
-
-
-f<-DIM_Human_SCAM
-f$diffexpressed <- "Not Shifted"
-    f$diffexpressed[f$ATE_padjBH < 0.05] <- "Shifted adj. pVal < 0.05"
-    f$diffexpressed[f$ATE_padjBH < 0.01] <- "Shifted adj. pVal < 0.01"
-    f$diffexpressed<-as.factor(f$diffexpressed)
-    f$targets<-NA
-    f$delabel <- NA
-    f$others<-NA
-    
-
-    f$targets<-ifelse(f$Accession %in%"P36507","P36507",ifelse(f$Accession %in% "Q02750","Q02750",NA))
-    f$delabel[f$Accession %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")] <- as.character(f$Accession[f$Accession %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")])
-    flevels<-data.frame(colors=c("#762a83","#b35806","#1b7837"),
-                        labels=c("Shifted adj. pVal < 0.05","Not Shifted","Shifted adj. pVal < 0.01"))
-    flevels<-flevels %>% dplyr::filter(labels %in% unique(f$diffexpressed))
-
-ggplot(f,mapping=aes(x=estimate,y=log10(ATE_padjBH),color=diffexpressed))+geom_point()+xlim(-2,2)+xlab("DIM")+scale_y_reverse()+geom_label_repel(f,mapping=aes(label=targets),color="black",max.overlaps = getOption("ggrepel.max.overlaps", default = 10),
-nudge_x = 3,
-nudge_y=1,
-force = 3)+ylab("log(adj.pvalue)")+xlab("DIM")+theme(text=element_text(size=18))
-```
-
-Zoom in
-
-```{r}
-ggplot(f,mapping=aes(x=estimate,y=log10(ATE_padjBH),color=diffexpressed))+geom_point()+xlim(-2,2)+xlab("DIM")+scale_y_reverse()+geom_label_repel(f,mapping=aes(label=targets),color="black",max.overlaps = getOption("ggrepel.max.overlaps", default = 10),
-nudge_x = 3,
-nudge_y=1,
-force = 3)+ylab("log(adj.pvalue)")+xlab("DIM")+theme(text=element_text(size=18))+ylim(0,-6)
-```
-
-Create a table for SCAM
-
-```{r}
-data.frame(Method="SCAM","Not.Shifted"=sum(as.numeric(f$diffexpressed=="Not Shifted")),"Shifted"=sum(as.numeric(!f$diffexpressed=="Not Shifted")))
-```
-
 

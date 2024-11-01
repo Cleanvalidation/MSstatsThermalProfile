@@ -39,6 +39,7 @@ library(ggrepel)
 
 theme_set(theme_bw())
 
+data("uniqueAccessions")
 ```
 
 # Data Import
@@ -46,46 +47,50 @@ theme_set(theme_bw())
 ### Import option 1: Read in your own file
 
 ```{r}
-WD<-"~/work/ivanovlab/figueroa-navedo.a/data/Human"
-#WD<-"E:/internal_dataset/PD_files"
-h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
+workingDirectory<-"~/Dataset_1/Fractions CFE"
 
-PD_df<-MSstatsThermalProfiler::read_cetsa(WD,WD,Frac=TRUE,temps=set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68)),solvent="DMSO",CARRIER=TRUE)
+h<-list.files(workingDirectory,pattern="Proteins.xlsx")|>as.list()
+
+PD_df<-read_cetsa(workingDirectory,workingDirectory,Frac=TRUE,temps=set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68)),solvent="DMSO",CARRIER=TRUE)
+
 head(PD_df)
 ```
-###Generate annotation file
+###Import option 2: use the example file
+
+```{r}
+# data(proteinSample_HumanData,package="MSstatsThermalProfiler")
+# 
+# PD_df<-proteinSample_HumanData
+```
+###Generate annotation file data
 ```{r}
 
 PD_df$Condition<-as.character(PD_df$Condition)
-Mapping<-PD_df|>dplyr::ungroup()|>dplyr::select(File.ID,Spectrum.File,Condition)|>dplyr::distinct()|>
-  dplyr::group_by(Condition)|>
-  dplyr::arrange(Condition)|>
-  dplyr::mutate(
-    treatment=ifelse(stringr::str_detect(Spectrum.File,"DMSO"),"vehicle","treated"),
-                TechRepMixture=seq(1,dplyr::n()))|>
+annotation_file<-PD_df|>
+  dplyr::select(File.ID,Spectrum.File,treatment,TechRepMixture,Experiment,Condition,Subject)|>
+  dplyr::ungroup()|>
+  dplyr::distinct()|>
+  dplyr::group_by(treatment)|>
+  dplyr::arrange(treatment)|>
+  dplyr::mutate(Color=ifelse(treatment=="vehicle"&TechRepMixture==1,"#00BCF4",
+                             ifelse(treatment == "vehicle" & TechRepMixture==2,"#2b8cbe",
+                                    ifelse(treatment=="treated" & TechRepMixture==1,"#F8776D",
+                                            "#fa9fb5"))),
+    Subject=Experiment)|>
   dplyr::ungroup()
 
-# #set mapping between temperatures and channels
-temps<-set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68))
-#TMT11 was used but the 75C temperature was filtered out
-# temps$Channel<-ifelse(temps$Channel=="131","131C",temps$Channel)
-#add temperatures
-df_annotation<-PD_df|>dplyr::select(Spectrum.File,Channel,File.ID)|>dplyr::distinct()|>dplyr::inner_join(temps,by="Channel")|>dplyr::inner_join(Mapping)
+
 
 #Add bioreplicate
-df_annotation$BioReplicate<-ifelse(df_annotation$temperature==min(df_annotation$temperature),"Norm",paste0(df_annotation$Channel,"_",df_annotation$treatment))
+PD_df$BioReplicate<-ifelse(PD_df$temperature==min(PD_df$temperature),"Norm",paste0(PD_df$Channel,"_",PD_df$treatment))
 
-df_annotation$Mixture<-paste0(df_annotation$treatment,"_",
-                                           df_annotation$TechRepMixture)
+#add mixture
+PD_df$Mixture<-paste0(PD_df$treatment,"_",
+                                           PD_df$TechRepMixture)
 
+#add Run
+PD_df$Run<-PD_df$Spectrum.File
 
-
-
-
-df_annotation$Run<-df_annotation$Spectrum.File
-
-#Filter out shared accessions
-#df<-df[!stringr::str_detect(df$`Master Protein Accessions`,";"),]
 #Filter out channel 131N
 PD_df<-PD_df[!stringr::str_detect(PD_df$Channel,"131C"),]
 #replace 131C with 131
@@ -95,12 +100,12 @@ PD_df$treatment<-stringr::str_extract(PD_df$Condition,"[[:lower:]]+")
 
 
 #same for annotation
-df_annotation<-df_annotation[!stringr::str_detect(df_annotation$Channel,"131C"),]
+PD_df<-PD_df[!stringr::str_detect(PD_df$Channel,"131C"),]
 #replace 131C with 131
-df_annotation$Channel<-ifelse(df_annotation$Channel=="131N","131",df_annotation$Channel)
+PD_df$Channel<-ifelse(PD_df$Channel=="131N","131",PD_df$Channel)
 
 #set bioreplicate
-df_annotation$BioReplicate<-paste0(df_annotation$treatment,"_",df_annotation$TechRepMixture)
+PD_df$BioReplicate<-paste0(PD_df$treatment,"_",PD_df$TechRepMixture)
 
 
 
@@ -108,39 +113,25 @@ df_annotation$BioReplicate<-paste0(df_annotation$treatment,"_",df_annotation$Tec
 ###Get a sense of missing value distributions
 
 ```{r}
-
-mapping <-PD_df |>dplyr::select(Condition,Subject)|>
-  dplyr::mutate(Condition=as.character(Condition))|>
-  dplyr::distinct()|>
-  dplyr::group_by(Condition)|>
-  dplyr::arrange(Condition)|>
-  dplyr::mutate(TechRepMixture=seq(1,dplyr::n()),
-                Color=ifelse(Condition=="vehicle"&TechRepMixture==1,"#00BCF4",
-                             ifelse(Condition == "vehicle" & TechRepMixture==2,"#2b8cbe",
-                                    ifelse(Condition=="treated" & TechRepMixture==1,"#F8776D",
-                                            "#fa9fb5"))))|>
-  dplyr::ungroup()
-
+#separate data into accessions and plexes
 MV<-PD_df|>
-  dplyr::inner_join(mapping)|>
-  dplyr::filter(TechRepMixture==1|TechRepMixture==2)|>
-  dplyr::group_by(Accession,Subject)|>
-  dplyr::select(Accession,Subject,Channel,temperature,Abundance,Condition,TechRepMixture,Color)|>
+  dplyr::select(-Subject)|>
+  dplyr::inner_join(annotation_file)|>
+  dplyr::group_by(Accession,File.ID)|>
   dplyr::distinct()|>
-  dplyr::filter(Channel!="131C")|>
   dplyr::group_split()
-
+#count the number of missing values per plex
 MV<-lapply(MV,function(x) x|>
   dplyr::mutate(missing_channels=sum(is.na(Abundance)),
-                plex = paste0(Condition,"_",TechRepMixture))|>
-  dplyr::select(Accession,missing_channels,plex,Condition,Color,TechRepMixture)|>
+                plex = Experiment)|>
+  dplyr::select(Accession,missing_channels,plex,Color,TechRepMixture,treatment,Experiment)|>
   dplyr::distinct())|>dplyr::bind_rows()
   
 
-histogram_mv<-ggplot(MV,mapping=aes(x=missing_channels,fill=plex),group=Condition)+geom_histogram()+facet_wrap(~Condition)+xlab("# of missing channels")+xlim(0,10)+
+histogram_mv<-ggplot(MV,mapping=aes(x=missing_channels,fill=plex),group=treatment)+geom_histogram()+facet_wrap(~treatment)+xlab("# of missing channels")+xlim(0,10)+
   scale_x_continuous(breaks=seq(0,10,1),labels=seq(0,10,1),limits= c(-1,11))+
   ylab("# of Proteins")+
-  scale_fill_manual(values = mapping$Color)+theme(text=element_text(size =20))
+  scale_fill_manual(values = MV$Color)+theme(text=element_text(size =20))
   
   
 path = getwd()
@@ -152,14 +143,19 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 ###Only for dataset 1: filter by missing values
 
 ```{r}
+#get missing plex channels and keep the proteins where all plexes have <=3 missing values
+complete_plexes<-MV|>
+  dplyr::distinct()|>
+  dplyr::group_by(Accession)|>
+  dplyr::mutate(more_than_3_missing_values=any(missing_channels>=3))|>
+  dplyr::filter(more_than_3_missing_values==FALSE)|>
+  dplyr::select(Accession)|>
+  dplyr::distinct()|>dplyr::ungroup()
+
 PD_df_filtered<-PD_df |>
-  dplyr::inner_join(MV|>
-                      dplyr::select(Accession,plex,missing_channels,TechRepMixture)|>
-                      dplyr::rename(Experiment=plex)|>
-                      dplyr::distinct())|>
-  dplyr::filter(missing_channels<=3)
+  dplyr::filter(Accession %in% complete_plexes$Accession)
 proteins_missing<-length(unique(PD_df$Accession))-length(unique(PD_df_filtered$Accession))
-print(paste0(round(proteins_missing/length(unique(PD_df$Accession))*100,2),"% of proteins were filtered out with more than 3 missing values"))
+print(paste0(round(proteins_missing/length(unique(PD_df$Accession))*100,2),"% proteins had at least one plex with more than 3 missing values"))
 
 ```
 
@@ -169,56 +165,52 @@ print(paste0(round(proteins_missing/length(unique(PD_df$Accession))*100,2),"% of
 
 # #set mapping between temperatures and channels
 temps<-set_temps(11,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67,68))
-#Add bioreplicate
-df_annotation$BioReplicate<-ifelse(df_annotation$temperature==min(df_annotation$temperature),"Norm",paste0(df_annotation$Channel,"_",df_annotation$treatment))
+#Add protein
+PD_df_filtered$Protein<-PD_df_filtered$Accession
+PD_df$Protein<-PD_df$Accession
 
-df_annotation$Mixture<-paste0(df_annotation$treatment,"_",
-                                           df_annotation$TechRepMixture)
+#add Condition
+PD_df_filtered$Condition<-paste0(PD_df_filtered$Channel,"_",PD_df_filtered$treatment)
 
+#add Run
+PD_df$Run<-PD_df$Spectrum.File
 
-df_annotation$Condition<-ifelse(df_annotation$temperature==min(df_annotation$temperature),"Norm",paste0(df_annotation$Channel,"_",df_annotation$treatment))
+#add Experiment
+PD_df_filtered$Experiment<-paste0(PD_df_filtered$treatment,"_",
+                                  PD_df_filtered$TechRepMixture)
 
-
-df_annotation$Run<-df_annotation$Spectrum.File
-
-#Filter out shared accessions
-#df<-df[!stringr::str_detect(df$`Master Protein Accessions`,";"),]
-PD_df<-PD_df|>
-  dplyr::inner_join(MV|>dplyr::select(Accession,plex,missing_channels)|>
-                      dplyr::rename(Experiment=plex)|>
-                      dplyr::distinct())|>
-  dplyr::filter(missing_channels <=3)
-
-#replace 131C with 131
-PD_df$Channel<-ifelse(PD_df$Channel=="131N","131",PD_df$Channel)
-
-#same for annotation
-df_annotation<-df_annotation[!stringr::str_detect(df_annotation$Channel,"131C"),]
-#replace 131C with 131
-df_annotation$Channel<-ifelse(df_annotation$Channel=="131N","131",df_annotation$Channel)
-df_annotation$Condition<-df_annotation$treatment
-
-PD_df<-PD_df|>dplyr::inner_join(df_annotation) |> dplyr::mutate(Protein = Accession)
+#Add mixture
+PD_df_filtered$Mixture<-paste0(PD_df_filtered$treatment,"_",
+                                           PD_df_filtered$TechRepMixture)
 ```
 
 #### Normalize the data
 
 ```{r}
-Human_TPPnorm_Proteins<-TPP_normalization(PD_df_filterede,TPPfilters=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),reference="126",CARRIER=FALSE)
+Human_TPPnorm_Proteins<-TPP_normalization(PD_df,TPPfilters=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),reference="126",CARRIER=FALSE)
 
-    Human_TPPnorm_Proteins$normData<-Human_TPPnorm_Proteins$normData
-proteins<-list(ProteinLevelData=Human_TPPnorm_Proteins$normData|>as.data.frame()|>dplyr::mutate(treatment=stringr::str_extract(Experiment,"[[:lower:]]+")))
+
+proteins<-list(ProteinLevelData=Human_TPPnorm_Proteins$normData|>as.data.frame()|>
+                 dplyr::mutate(treatment=stringr::str_extract(Experiment,"[[:lower:]]+")))
 
 
 ```
 
-## Add comparison
+## Add comparison or contrast matrix for LMM
 
 ```{r}
-df<-list(ProteinLevelData=PD_df_filtered,FeatureLevelData=NA)
+MSstats_Protein_input<-proteins$ProteinLevelData|>
+  dplyr::filter(Protein %in% uniqueAccessions)|>
+  dplyr::mutate(Run = BioReplicate,
+                Condition=ifelse(temperature==min(unique(PD_df$temperature,na.rm=T)),
+                                 "Norm",
+                                 Condition),
+                treatment=condition)
+df<-list(ProteinLevelData=MSstats_Protein_input,FeatureLevelData=NA)
 
-comparison<-make_contrast_matrix(df,temps=c("53.8","57.1","60.4"))
-comparison_mid<-make_contrast_matrix(df,temps=c( "47.2", "50.5", "53.8"))
+comparison<-make_contrast_matrix(df,temps=c("47.2", "50.5", "53.8"))
+comparison_mid<-make_contrast_matrix(df,temps=c( "50.5","53.8","57.1"))
+comparison_late<-make_contrast_matrix(df,temps=c("53.8","57.1","60.4"))
 comparison
 ```
 
@@ -242,6 +234,19 @@ DIM<-MSstatsThermalProfiler::groupComparisonThermalProfiling(
 DIM_mid<-MSstatsThermalProfiler::groupComparisonThermalProfiling(
   df,
   contrast.matrix = comparison_mid,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
+)
+
+DIM_late<-MSstatsThermalProfiler::groupComparisonThermalProfiling(df,
+  contrast.matrix = comparison_late,
   moderated = FALSE,
   adj.method = "BH",
   remove_norm_channel = TRUE,
@@ -337,7 +342,7 @@ DIM_Human_SCAM<-compute_pvalues_ATE_RE_F(Human_SCAM_proteins)
 For the total number of proteins
 
 ```{r}
-Total_prot<-list("TPP"=unique(Human_TPPnorm_Proteins$normData$Protein),"NPARC"=unique(Human_TPPnorm_Proteins$normData$Protein),"SCAM"=unique(Human_TPPnorm_Proteins$normData$Protein),"MSstatsTMT"=unique(Human_TPPnorm_Proteins$normData$Protein))
+Total_prot<-list("TPP"=unique(PD_df$Accession),"NPARC"=unique(PD_df$Accession),"SCAM"=unique(PD_df$Accession),"MSstatsTMT"=unique(PD_df$Accession))
 #remove shared accessions
 Total_prot<-lapply(Total_prot,function(x) x[!stringr::str_detect(x,";")])
 #remove missing values
@@ -368,9 +373,9 @@ Statistical model fit convergence
 
 ```{r}
 Benchmarks_TPPproc<-list(
-  "TPP"=unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$model_converged_treated_1 & TPPtr_human_results$model_converged_treated_2 & TPPtr_human_results$model_converged_vehicle_1 & TPPtr_human_results$model_converged_vehicle_2]),
+  "TPP"=unique(TPP_Human_results_F$uniqueID[which(!is.na(TPP_Human_results_F$p_adj_NPARC))]),
   "NPARC"=unique(NPARC_test_emp$id),
-  "SCAM"=unique(DIM_Human_SCAM$Accession),"MSstatsTMT"=unique(DIM$ComparisonResult$Protein))
+  "SCAM"=unique(DIM_Human_SCAM$Accession),"MSstatsTMT"=unique(DIM_mid                                                $ComparisonResult$Protein))
 #remove shared accessions
 Benchmarks_TPPproc<-lapply(Benchmarks_TPPproc,function(x) x[!stringr::str_detect(x,";")])
 #remove missing values
@@ -385,7 +390,7 @@ Benchmarks_TPPproc_n<-purrr::map2(Benchmarks_TPPproc,Benchmarks_TPPproc_targ,fun
 For proteins that passed the R\^2 and plateau filters
 
 ```{r}
-TPPtr_filters<-unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$passed_filter_vehicle_1_vs_treated_1&TPPtr_human_results$passed_filter_vehicle_2_vs_treated_2])
+TPPtr_filters<-unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$passed_filter_Vehicle_1_vs_Treatment_1&TPPtr_human_results$passed_filter_Vehicle_2_vs_Treatment_2])
 #remove shared accessions
 TPPtr_filters<-TPPtr_filters[!stringr::str_detect(TPPtr_filters,";")]
 #remove missing values
@@ -405,7 +410,7 @@ Benchmarks_TPPproc_filt_n<-purrr::map2(Benchmarks_TPPproc_filt,Benchmarks_TPPpro
 For differentially expressed proteins
 
 ```{r}
-Benchmarks_TPPproc_p<-list("TPP"=unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$pVal_adj_vehicle_1_vs_treated_1<0.05 & TPPtr_human_results$pVal_adj_vehicle_2_vs_treated_2 < 0.05 & TPPtr_human_results$Protein_ID %in% TPPtr_filters]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters])),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM$ComparisonResult$Protein[DIM$ComparisonResult$adj.pvalue<0.05]))
+Benchmarks_TPPproc_p<-list("TPP"=unique(TPP_Human_results_F$uniqueID[which(TPP_Human_results_F$p_adj_NPARC<0.05)]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters])),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_mid$ComparisonResult$Protein[DIM_mid$ComparisonResult$adj.pvalue<0.05]))
 #remove shared accessions
 Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) x[!stringr::str_detect(x,";")])
 #remove missing values
