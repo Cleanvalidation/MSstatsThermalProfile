@@ -53,11 +53,12 @@ theme_set(theme_bw())
 **Use WD\<-your_working_directory to get a folder where your PSM data is stored**
 
 ```{r}
+workingDirectory<-"~/Dataset_1/Fractions CFE"
 
 #workingDirectory<- "~/work/ivanovlab/figueroa-navedo.a/data/Human"
-# h<-list.files(workingDirectory,pattern="PSMs")|>as.list()
-# 
-# df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(WD,"/",x),.name_repair = "universal")) |> dplyr::bind_rows()
+h<-list.files(workingDirectory,pattern="PSMs")|>as.list()
+ 
+df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(workingDirectory,"/",x),.name_repair = "universal")) |> dplyr::bind_rows()
 ```
 
 ### Import option 2: Use the example file
@@ -65,9 +66,9 @@ theme_set(theme_bw())
 **load the peptide spectrum match (PSM) example file into R**
 
 ```{r}
-data("PSMsample_HumanData", package = "MSstatsThermalProfiler")
-df<-PSMsample_HumanData
-names(df)<-stringr::str_replace_all(names(df)," ",".")
+#data("PSMsample_HumanData", package = "MSstatsThermalProfiler")
+#df<-PSMsample_HumanData
+#names(df)<-stringr::str_replace_all(names(df)," ",".")
 ```
 
    # Annotation File Generation
@@ -325,6 +326,7 @@ NPARC_human_fits <-NPARC::NPARCfit(x =proteins1$temperature,
 
 ```{r}
 NPARC_test_emp<-NPARC::NPARCtest(NPARC_human_fits$metrics,dfType="empirical")
+NPARC_test_emp$id<-as.character(NPARC_test_emp$id)
 hist(NPARC_test_emp$pVal)
 ```
 
@@ -386,7 +388,7 @@ Output_proc_n<-purrr::map2(Output_proc,Benchmarks_MSstatsTMTproc_targ,function(x
 Statistical model fit convergence
 
 ```{r}
-Benchmarks_MSstatsTMTproc<-list("TPP"=unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$model_converged_treated_1 & TPPtr_human_results$model_converged_treated_2 & TPPtr_human_results$model_converged_vehicle_1 & TPPtr_human_results$model_converged_vehicle_2]),"NPARC"=unique(NPARC_test_emp$id),"SCAM"=unique(DIM_Human_SCAM$Accession),"MSstatsTMT"=DIM_late$ComparisonResult$Protein[is.na(DIM_late$ComparisonResult$issue)])
+Benchmarks_MSstatsTMTproc<-list("TPP"=unique(TPP_human_results_F$uniqueID[!is.na(TPP_human_results_F$p_adj_NPARC)]),"NPARC"=unique(NPARC_test_emp$id),"SCAM"=unique(DIM_Human_SCAM$Accession),"MSstatsTMT"=DIM_late$ComparisonResult$Protein[is.na(DIM_late$ComparisonResult$issue)])
 #remove shared accessions
 Benchmarks_MSstatsTMTproc<-lapply(Benchmarks_MSstatsTMTproc,function(x) x[!stringr::str_detect(x,";")])
 #remove missing values
@@ -418,7 +420,8 @@ Benchmarks_MSstatsTMTproc_filt_n<-purrr::map2(Benchmarks_MSstatsTMTproc_filt,Ben
 For differentially expressed proteins
 
 ```{r}
-Benchmarks_MSstatsTMTproc_p<-list("TPP"=unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$pVal_adj_vehicle_1_vs_treated_1<0.05 & TPPtr_human_results$pVal_adj_vehicle_2_vs_treated_2 < 0.05 & TPPtr_human_results$Protein_ID %in% TPPtr_filters]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&as.character(NPARC_test_emp$id) %in% TPPtr_filters])),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
+
+Benchmarks_MSstatsTMTproc_p<-list("TPP"=unique(TPP_human_results_F$uniqueID[which(TPP_human_results_F$p_adj_NPARC<0.05)]),"NPARC"=as.character(unique(NPARC_test_emp$id[which(NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters)])),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
 #remove shared accessions
 Benchmarks_MSstatsTMTproc_p<-lapply(Benchmarks_MSstatsTMTproc_p,function(x) x[!stringr::str_detect(x,";")])
 #remove missing values
@@ -431,7 +434,10 @@ Benchmarks_MSstatsTMTproc_targ<-
 
 Benchmarks_MSstatsTMTproc_p_n<-purrr::map2(Benchmarks_MSstatsTMTproc_p,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: differential abundance \n(Table 2, steps 1-5)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-
+NPARC presents no statistically significant hits because we omitted shared proteins in our study and the other two proteins are not passing TPP filtering criteria
+```{r}
+NPARC_test_emp$id[which(NPARC_test_emp$pAdj<0.05)]
+```
 Plot the bar charts
 
 ```{r}
@@ -467,8 +473,8 @@ Save the proteins processed by MSstatsTMT
 Benchmarks_MSstatsTMTproc_p<-lapply(Benchmarks_MSstatsTMTproc_p,function(x) as.character(x)|>na.omit())
 
 names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat. model","MSstatsTMT stat. model")
-Human_MSstatsTMTprocesed<-Benchmarks_MSstatsTMTproc_p
-saveRDS(Human_MSstatsTMTprocesed,"Human_MSstatsTMTprocesed.RDS")
+Dataset_1_psm_results<-Benchmarks_MSstatsTMTproc_p
+saveRDS(Dataset_1_psm_results,"Dataset_1_psm_results.RDS")
 ```
 
 # Venn Diagrams
@@ -482,7 +488,7 @@ Venn_Humandata
 # Venn Diagrams (top 3)
 
 ```{r}
-png(filename = "Venn_Humandata_Tm_MSstat.png",
+png(filename = "Venn_Humandata_MSstat.png",
     width =12, height = 6, units = "in", pointsize = 12,
     res = 600,type ="cairo")  
 
@@ -549,7 +555,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 
 ```{r}
 
-MSstatsTMT_proc<-lapply(Human_MSstatsTMTprocesed
+MSstatsTMT_proc<-lapply(Dataset_1_psm_results
                         ,function(x) as.character(x)|>na.omit())
 
 TPP_proc<-lapply(Human_TPPprocesed,function(x) as.character(x)|>na.omit())
@@ -657,10 +663,10 @@ purrr::map2(compare_proc[4],colors[4],function(x,y)VennDiagram::venn.diagram(
 ```{r}
 
 results<-data.frame(processing=rep("MSstatsTMT",3),"stat. model"=rep("MSstatsTMT",3),configuration=c("late","mid","early"),temperatures=stringr::str_c(temps_ear,temps_mid,temps_late,sep=","),"p-adj lt 0.05"=c(length(na.omit(unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))),
-                                                                                                                                                            length(unique(na.omit(ATE_mid$ComparisonResult$Protein[ATE_mid$ComparisonResult$adj.pvalue<0.05]))),
-                                                                                                                                                            length(unique(na.omit(ATE_early$ComparisonResult$Protein[ATE_early$ComparisonResult$adj.pvalue<0.05])))),
+                                                                                                                                                            length(unique(na.omit(DIM_mid$ComparisonResult$Protein[DIM_mid$ComparisonResult$adj.pvalue<0.05]))),
+                                                                                                                                                            length(unique(na.omit(DIM_ear$ComparisonResult$Protein[DIM_ear$ComparisonResult$adj.pvalue<0.05])))),
                     targets=c(sum(DIM_late$ComparisonResult$adj.pvalue<0.05&DIM_late$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750")),
-                              sum(ATE_mid$ComparisonResult$adj.pvalue<0.05&ATE_mid$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750")),sum(ATE_early$ComparisonResult$adj.pvalue<0.05&ATE_early$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750"))))
+                              sum(DIM_mid$ComparisonResult$adj.pvalue<0.05&DIM_mid$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750")),sum(DIM_ear$ComparisonResult$adj.pvalue<0.05&DIM_ear$ComparisonResult$Protein%in%c("P36507",                                                                              "Q02750"))))
                                                                                                          results     
 ```
 
