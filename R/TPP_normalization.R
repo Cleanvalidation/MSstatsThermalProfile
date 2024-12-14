@@ -2,6 +2,9 @@ TPP_normalization<-function(pd_protein_data,TPPfilters,temps,reference,CARRIER=F
   if(any(names(pd_protein_data)=="Abundance")){
     pd_protein_data$value<-pd_protein_data$Abundance
   }
+  if(!any(names(pd_protein_data)=="Experiment")){
+    pd_protein_data$Experiment<-paste0(pd_protein_data$treatment,"_",pd_protein_data$TechRepMixture)
+  }
   #normalize data
   #if the condition is set to MSstats format channel_treatment
   if(any(stringr::str_detect(pd_protein_data$Condition,"[:punct:]"))){
