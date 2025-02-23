@@ -4,7 +4,7 @@ msstats_icc<-function(summarised.proteins,temps=c("53.8","57.1","60.4")){
   comparison<-make_contrast_matrix(summarised.proteins,temps=temps)
   colnames(comparison)<-names(comparison)
   #use MSstatsTMT statistical models to evaluate contrasts at the specific temperatures
-  DIM_MSstats<-groupComparisonThermalProfiling(
+  DIM_MSstats<-tryCatch(groupComparisonThermalProfiling(
     summarised.proteins,
     contrast.matrix = comparison,
     moderated = FALSE,
@@ -18,7 +18,19 @@ msstats_icc<-function(summarised.proteins,temps=c("53.8","57.1","60.4")){
     log_file_path = NULL,
     missing_timepoint = "replace",
     replacement=list("131_treated" = c("130C_treated"))
-  )
+  ),groupComparisonThermalProfiling(
+    summarised.proteins,
+    contrast.matrix = comparison,
+    moderated = FALSE,
+    adj.method = "BH",
+    remove_norm_channel = TRUE,
+    remove_empty_channel = FALSE,
+    save_fitted_models = TRUE,
+    use_log_file = FALSE,
+    append = FALSE,
+    verbose = TRUE,
+    log_file_path = NULL,
+    missing_timepoint = "drop"))
   #this calculates the residuals from MSstats output if the class is lmm
   VarCor_MSstats<-lapply(DIM_MSstats$FittedModel,function(x)
     tryCatch(print(lme4::VarCorr(x,comp="Variance"))|>
