@@ -39,10 +39,10 @@ Print out ICC distributions and simulate a strong shifter for a design with two 
 #get variance components
 Dataset_1_ICC<-msstats_icc(summarised.proteins,temps=unique(summarised.proteins$ProteinLevelData$temperature)[c(5,6)])
 #generate simulations
-Thermal_4plex_4rep_strong<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
+Thermal_2plex_10rep_strong<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
 
 #plot histograms
-Two_temps_4plex_4rep_strong<-plot_benchmarks_MSstatsTMT(Thermal_4plex_4rep_strong,design="TPP",shifter="strong")
+Two_temps_2plex_10rep_strong<-plot_benchmarks_MSstatsTMT(Thermal_2plex_10rep_strong,design="TPP",shifter="strong")
 ```
 Simulate strong interactor with 4 TMT 10-plexes, 4 biological replicates and 10 temperatures
 
