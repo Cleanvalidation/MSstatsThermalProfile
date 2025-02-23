@@ -1,4 +1,4 @@
-plot_benchmarks<-function(result,temps=unique(result$temperature),shifter="strong",design="TPP"){
+plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="strong",design="TPP"){
   #QC plot of the simulation with 5 icc values
   #define an icc column based on the protein ID
   result$ICC<-stringr::str_extract(result$Protein,"icc_[:digit:].[[:digit:]]+")
@@ -33,11 +33,17 @@ plot_benchmarks<-function(result,temps=unique(result$temperature),shifter="stron
   Profile_plot
   dev.off()
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))
-  dataMSstat<-list(ProteinLevelData=result)
+  dataTPP<-list(ProteinLevelData=result)
   comparison<-make_contrast_matrix(dataMSstat,temps=temps)
+  #set condition vehicle and treated for TPP
+ dataTPP$ProteinLevelData$Condition<-stringr::str_extract(dataTPP$ProteinLevelData$treatment,"[[:lower:]]+")
+ #set technical replicate
+ dataTPP$ProteinLevelData$TechRepMixture<-stringr::str_extract(dataTPP$ProteinLevelData$Subject,"_[:digit:]")
+ #Run data with TPP splines
+  TPP<-TPP_NPARC_calc(dataTPP$ProteinLevelData,method="NPARC",DF=5,CARRIER=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),NORM=FALSE,filters=TRUE)
 
 
-  ATE_MSstats<-MSstatsTMT::groupComparisonTMT(
+    MSstatsTMT::groupComparisonTMT(
     dataMSstat,
     contrast.matrix = comparison,
     moderated = FALSE,
