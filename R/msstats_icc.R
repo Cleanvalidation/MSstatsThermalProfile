@@ -2,7 +2,7 @@ msstats_icc<-function(summarised.proteins,temps=c("53.8","57.1","60.4")){
 
   #define the contrast matrix
   comparison<-make_contrast_matrix(summarised.proteins,temps=temps)
-  colnames(comparison)<-names(comparison)
+
   #use MSstatsTMT statistical models to evaluate contrasts at the specific temperatures
   DIM_MSstats<-tryCatch(groupComparisonThermalProfiling(
     summarised.proteins,
