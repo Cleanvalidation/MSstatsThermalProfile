@@ -27,7 +27,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
   png(filename = paste0("ProfilePlots_",shifter,design,"_TPPproc.png"),
       width =1600, height = 1600, units = "px", pointsize = 12,
       res = 130,type ="cairo")
-  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=Condition,y=Abundance,color=treatment))+geom_point()+
+  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=Condition,y=Abundance,color=treatment))+geom_point()+geom_step()+
     ylab(expression(log[2]~Abundance))+
     facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=15))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   Profile_plot
