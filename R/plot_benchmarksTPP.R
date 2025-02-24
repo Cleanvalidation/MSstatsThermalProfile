@@ -50,7 +50,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
  dataTPP$ProteinLevelData$File.ID<-dataTPP$ProteinLevelData$Subject
  #normalize with TPP dataTPP<-TPP_normalization(dataTPP$ProteinLevelData,TPPfilters=FALSE,temps=unique(temps),reference=refChannel,CARRIER=FALSE)
  #Run data with TPP splines
-  TPP<-TPP_NPARC_calc(dataTPP$normData,method="NPARC",DF=5,CARRIER=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),NORM=FALSE,filters=TRUE)
+  TPP<-TPP_NPARC_calc(dataTPP$ProteinLevelData,method="NPARC",DF=5,CARRIER=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),NORM=FALSE,filters=TRUE)
 
   TPP$ICC<-stringr::str_extract(TPP$uniqueID,"icc_[:digit:].[[:digit:]]+")
   #append biological variance text to numeric values
