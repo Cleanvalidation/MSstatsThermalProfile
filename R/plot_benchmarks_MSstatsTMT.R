@@ -25,9 +25,12 @@ plot_benchmarks_MSstatsTMT<-function(result,design="TPP",shifter="Non"){
 
   png(filename = paste0("ProfilePlots_",shifter,design,"_MsstatsTMTproc.png"),
       width =1600, height = 1600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
+      res = 600,type ="cairo")
   Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=Condition,y=Abundance,color=treatment))+geom_point(size=5)+
     ylab(expression(log[2]~Abundance))+
+    geom_step(size=1.1)+
+    ggtitle(paste0("Simulation template: ",shifter, " interaction"))+
+    scale_x_continuous("Temperature",breaks=as.numeric(unique(temps)), labels=as.numeric(unique(temps)))+
     facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=15))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   Profile_plot
   dev.off()

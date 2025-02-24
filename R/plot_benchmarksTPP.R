@@ -22,17 +22,21 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
   One_prot_ICC<-result|>
     dplyr::group_by(ICC)|>
     dplyr::filter(Protein %in% unique(result$Protein)[2])|>
-    dplyr::mutate(Accession=Protein)|>
+    dplyr::mutate(Accession=Protein,
+                  Condition=stringr::str_extract(treatment,"[[:lower:]]+"))|>
     dplyr::ungroup()
   png(filename = paste0("ProfilePlots_",shifter,design,"_TPPproc.png"),
       width =1600, height = 1600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
-  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=Condition,y=Abundance,color=treatment))+geom_point()+geom_step()+
-    ylab(expression(log[2]~Abundance))+
-    facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=15))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      res = 600,type ="cairo")
+  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=temperature,y=Abundance,color=treatment))+
+    geom_point()+geom_step(size=1.1)+
+    ylab("Log of protein abundances")+
+    ggtitle(paste0("Simulation template: ",shifter, " interaction"))+
+    scale_x_continuous("Temperature",breaks=as.numeric(unique(result$temperature)), labels=as.numeric(unique(result$temperature)))+
+    facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=8))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   Profile_plot
   dev.off()
-  saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))
+  saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_TPPproc.RDS"))
   dataTPP<-list(ProteinLevelData=result)
   comparison<-make_contrast_matrix(dataMSstat,temps=temps)
   #set condition vehicle and treated for TPP
