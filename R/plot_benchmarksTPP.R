@@ -60,7 +60,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
   if(design=="onePot"){
     if(shifter=="strong"){
       TPP_hist<-ggplot2::ggplot(TPP,mapping=aes(x=p_adj_NPARC))+
-        geom_histogram(fill="#030366",color="black",bins=1,binwidth = 0.025)+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
+        geom_histogram(fill="#D95F0E",color="black",bins=1,binwidth = 0.025)+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
         coord_cartesian(xlim = c(0, 1))+ylim(0,1000)+xlab("pvalue")+
         theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
         scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
@@ -68,7 +68,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
                   label=paste0(TPP$Sens," %"),size=6)+ylab("protein count")
     }else{
       TPP_hist<-ggplot2::ggplot(TPP$ComparisonResult,mapping=aes(x=p_adj_NPARC))+
-        geom_histogram(fill="#030366",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
+        geom_histogram(fill="#D95F0E",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
         scale_x_continuous(n.breaks=8)+ylim(0,1000)+xlab("pvalue")+
         theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
         scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
@@ -77,7 +77,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
     }
   }else{#if this is a TPP design
     TPP_hist<-ggplot2::ggplot(TPP$ComparisonResult,mapping=aes(x=p_adj_NPARC))+
-      geom_histogram(fill="#2C7FB8",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
+      geom_histogram(fill="#D95F0E",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
       ylim(0,1000)+xlab("pvalue")+ scale_x_continuous(n.breaks=8)+
       theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
       scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
