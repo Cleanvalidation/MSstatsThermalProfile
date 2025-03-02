@@ -39,7 +39,7 @@ plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="st
   dev.off()
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_TPPproc.RDS"))
   dataTPP<-list(ProteinLevelData=result)
-  comparison<-make_contrast_matrix(dataMSstat,temps=temps)
+  comparison<-make_contrast_matrix(dataTPP,temps=temps)
   #set condition vehicle and treated for TPP
  dataTPP$ProteinLevelData$Condition<-stringr::str_extract(dataTPP$ProteinLevelData$treatment,"[[:lower:]]+")
  #set technical replicate

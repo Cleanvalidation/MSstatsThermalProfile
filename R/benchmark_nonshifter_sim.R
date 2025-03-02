@@ -37,13 +37,14 @@ benchmark_nonshifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_r
     dplyr::inner_join(temps)
   #save non-shifting template
   png(filename = "template_MsstatsTMTproc_nonshift.png",
-      width =600, height = 600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
+      width =1600, height = 1600, units = "px", pointsize = 12,
+      res = 600,type ="cairo")
   Template_TN<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point(size=2)+
-    geom_step(linewidth=1)+ylab(expression(log[2]~Abundance))+
-    ggtitle("Nonshifter template: Q6NV46")+
-    scale_x_continuous("temperature",breaks=unique(template_simulation$temperature))+
-    theme(text=element_text(size=18),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="top")
+    geom_step(size=1.1)+
+    ylab("Log of protein abundances")+
+    ggtitle(paste0("Simulation template: non interaction"))+
+    scale_x_continuous("Temperature",breaks=as.numeric(unique(result$temperature)), labels=as.numeric(unique(result$temperature)))+theme(text=element_text(size=8))+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="bottom")
   Template_TN
   dev.off()
   saveRDS(Template_TN,"Template_TN.RDS")
