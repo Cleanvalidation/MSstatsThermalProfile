@@ -42,7 +42,7 @@ theme_set(theme_bw())
 data("uniqueAccessions")
 ```
 
-# Data Import
+#A.  Data Import
 
 ### Import option 1: Read in your own file
 
@@ -62,7 +62,7 @@ head(PD_df)
 # 
 # PD_df<-proteinSample_HumanData
 ```
-###Generate annotation file data
+#B. Table 1, step 1
 ```{r}
 
 PD_df$Condition<-as.character(PD_df$Condition)
@@ -184,7 +184,7 @@ PD_df_filtered$Mixture<-paste0(PD_df_filtered$treatment,"_",
                                            PD_df_filtered$TechRepMixture)
 ```
 
-#### Normalize the data
+#C. Table 1, steps 2 and 6: Normalize the data
 
 ```{r}
 Human_TPPnorm_Proteins<-TPP_normalization(PD_df,TPPfilters=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),reference="126",CARRIER=FALSE)
@@ -195,8 +195,8 @@ proteins<-list(ProteinLevelData=Human_TPPnorm_Proteins$normData|>as.data.frame()
 
 
 ```
-
-## Add comparison or contrast matrix for LMM
+#Table 2
+### Create a matrix to measure the contrast using a subset of temperatures
 
 ```{r}
 MSstats_Protein_input<-proteins$ProteinLevelData|>
@@ -214,7 +214,7 @@ comparison_late<-make_contrast_matrix(df,temps=c("53.8","57.1","60.4"))
 comparison
 ```
 
-6.  Fit linear mixed models with groupComparisons from MSstatsTMT
+###  Fit linear mixed models with groupComparisons from MSstatsTMT
 
 ```{r}
 DIM<-MSstatsThermalProfiler::groupComparisonThermalProfiling(
@@ -261,9 +261,8 @@ DIM_late<-MSstatsThermalProfiler::groupComparisonThermalProfiling(df,
 
 # Benchmarking
 
-## TPPtr
+#D. TPP sigmoid
 
-benchmarking sigmoid with Tm stat model
 
 ```{r}
 proteins1<-proteins$ProteinLevelData|>dplyr::mutate(treatment=stringr::str_remove(stringr::str_extract(stringr::str_to_lower(Run),"[[:lower:]]+_"),"_"),
@@ -278,9 +277,9 @@ end=proc.time()
 print(end-start)
 ```
 
-## TPP
+#E. TPP splines
 
-benchmarking splines with Ftest
+benchmarking splines with F-test
 
 ```{r}
 
@@ -291,7 +290,7 @@ end=proc.time()
 print(end-start)
 ```
 
-## NPARC
+#F. NPARC
 
 benchmarking sigmoids with Ftest
 
@@ -323,7 +322,7 @@ hist(NPARC_test_theo$pAdj,breaks=20)
 
 ```
 
-## SCAM Splines
+#G.  SCAM Splines
 
 ```{r}
 
@@ -337,7 +336,8 @@ DIM_Human_SCAM<-compute_pvalues_ATE_RE_F(Human_SCAM_proteins)
   
 ```
 
-# Bar charts
+#H. Figures 1 and 2
+##Panel C, row 1
 
 For the total number of proteins
 
@@ -353,7 +353,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Total_prot,function(x) sum(as.character(x)%i
 
 Total_prot_n<-purrr::map2(Total_prot,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins (unique protein groups):\n from PD",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-
+##Panel C, row 2
 output from TPP processing
 
 ```{r}
@@ -368,7 +368,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Output_proc,function(x) sum(x%in%c("P36507",
 
 Output_proc_n<-purrr::map2(Output_proc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after \n TPP normalization (Table 1)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-
+##Panel C, row 3
 Statistical model fit convergence
 
 ```{r}
@@ -386,7 +386,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Benchmarks_TPPproc,function(x) sum(x%in%c("P
 
 Benchmarks_TPPproc_n<-purrr::map2(Benchmarks_TPPproc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: converged fit\n(Table 2, steps 1-3)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-
+##Panel C, row 4
 For proteins that passed the R\^2 and plateau filters
 
 ```{r}
@@ -406,7 +406,7 @@ Benchmarks_TPPproc_targ<-
 
 Benchmarks_TPPproc_filt_n<-purrr::map2(Benchmarks_TPPproc_filt,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(x),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after filtering \n(Table 2, steps 1-4)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-
+##Panel C, row 5
 For differentially expressed proteins
 
 ```{r}
@@ -423,7 +423,44 @@ Benchmarks_TPPproc_targ<-
 Benchmarks_TPPproc_p_n<-purrr::map2(Benchmarks_TPPproc_p,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: differential abundance \n(Table 2, steps 1-5)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
 
-## Plot the bar charts
+##Save R files
+
+
+```{r}
+names(Benchmarks_TPPproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat. model","MSstatsTMT stat. model")
+
+saveRDS(Benchmarks_TPPproc_p,"Human_TPPprocesed.RDS")
+```
+
+# I. Plot the curves for Figure 1, panels A-D and save data
+
+```{r}
+targets<-Human_TPPnorm_Proteins$normData|>as.data.frame()|>
+  dplyr::filter(Protein%in% c("P36507","Q02750"))|>
+  dplyr::mutate(Accession=Protein,
+                treatment=stringr::str_extract(Experiment,"[[:lower:]]+"))|>
+  dplyr::inner_join(Stat_mod,relationship="many-to-many")|>
+  dplyr::group_by(Accession)|>
+  dplyr::group_split()
+
+DIM_targets<-DIM$FittedModel[which(names(DIM$FittedModel) %in% c("P36507","Q02750"))]
+fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))
+
+nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
+target_curves<-lapply(fitted_MSstat,function(x){plotMethods(x,temps=c("53.8","57.1","60.4"),processing="TPP",fit="Spline")
+})
+names(target_curves)<-nam
+
+target_curves$P36507
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_spline_P36507.tiff")
+
+target_curves$Q02750
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_spline_Q02750.tiff")
+
+```
+
+
+#J. Figure 2, panel A bar charts
 
 ```{r}
 bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
@@ -454,7 +491,22 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 
 ```
 
-# Compare Venn Diagrams between processing (copy and paste in console)
+#K.Figure 2, panel B Venn Diagrams (top 3)
+
+```{r}
+png(filename = "Venn_Dataset1_Tm_TPP.png",
+    width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+Venn_top3<-ggvenn::ggvenn(data=Benchmarks_TPPproc_p[c(1,2,4)],fill_color =c("#D95F0E","#FEC44F","#2C7FB8"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+ggtitle("TPP processed pAdj < 0.05")+theme(text=element_text(size=20))
+Venn_top3
+dev.off() 
+```
+
+
+#L. Figure 2, Panel E
+Compare Venn Diagrams between processing (copy and paste in console)
 
 ```{r}
 
@@ -564,39 +616,7 @@ purrr::map2(compare_proc[4],colors[4],function(x,y)VennDiagram::venn.diagram(
 
 ```
 
-#Save results for Venn diagram processing
-
-## 
-
-```{r}
-names(Benchmarks_TPPproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat. model","MSstatsTMT stat. model")
-
-saveRDS(Benchmarks_TPPproc_p,"Human_TPPprocesed.RDS")
-```
-
-# Venn Diagrams
-
-```{r}
-
-Venn_Humandata<-ggvenn::ggvenn(data=Benchmarks_TPPproc_p,fill_color =c("#D95F0E","#FEC44F","#07fff8", "#2C7FB8"),set_name_size=4,text_size=4,stroke_size=1.1,fill_alpha = 0.6,show_percentage = FALSE)+ggtitle("pAdj < 0.05")+theme(text=element_text(size=20))
-Venn_Humandata
-
-
-```
-
-# Venn Diagrams (top 3)
-
-```{r}
-png(filename = "Venn_Humandata_Tm_TPP.png",
-    width =12, height = 6, units = "in", pointsize = 12,
-    res = 600,type ="cairo")  
-
-library(ggvenn)
-Venn_top3<-ggvenn::ggvenn(data=Benchmarks_TPPproc_p[c(1,2,4)],fill_color =c("#D95F0E","#FEC44F","#2C7FB8"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+ggtitle("TPP processed pAdj < 0.05")+theme(text=element_text(size=20))
-Venn_top3
-dev.off() 
-```
-
+#Venn diagram processing
 #Filter expected targets from each result
 
 ```{r}
@@ -618,150 +638,3 @@ Stat_mod<-data.frame(Protein=unique(MSstat_human$Protein))|>dplyr::mutate(NPARC_
 
 ```
 
-# Plot the curves
-
-```{r}
-targets<-Human_TPPnorm_Proteins$normData|>as.data.frame()|>
-  dplyr::filter(Protein%in% c("P36507","Q02750"))|>
-  dplyr::mutate(Accession=Protein,
-                treatment=stringr::str_extract(Experiment,"[[:lower:]]+"))|>
-  dplyr::inner_join(Stat_mod,relationship="many-to-many")|>
-  dplyr::group_by(Accession)|>
-  dplyr::group_split()
-
-DIM_targets<-DIM$FittedModel[which(names(DIM$FittedModel) %in% c("P36507","Q02750"))]
-fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))
-
-nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
-target_curves<-lapply(fitted_MSstat,function(x){plotMethods(x,temps=c("53.8","57.1","60.4"),processing="TPP",fit="Spline")
-})
-names(target_curves)<-nam
-
-target_curves$P36507
-ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_spline_P36507.tiff")
-
-target_curves$Q02750
-ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_spline_Q02750.tiff")
-
-```
-
-See which proteins are significant with MSsstatsTMT
-
-```{r}
-MSstats_sig<-as.character(DIM$ComparisonResult$Protein[which(DIM$ComparisonResult$adj.pvalue<0.05)])
-
-MSstats_targets<-MSstats_sig[which(MSstats_sig %in% c("P36507","Q02750"))]
-```
-
-Check NPARC significant proteins
-
-```{r}
-NPARC_sig<-as.character(NPARC_test_emp$id[which(NPARC_test_emp$pAdj<0.05)])
-
-NPARC_targets<-NPARC_sig[which(NPARC_sig %in% c("P36507","Q02750"))]
-```
-
-Check TPP significant proteins
-
-```{r}
-TPP_sig<-as.character(TPP_Human_results_F$uniqueID[which(TPP_Human_results_F$p_adj_NPARC<0.05)])
-
-TPP_targets<-TPP_sig[which(TPP_sig %in% c("P36507","Q02750"))]
-```
-
-Check SCAM targets
-
-```{r}
-DIM_sig<-as.character(DIM_Human_SCAM$Accession[which(DIM_Human_SCAM$ATE_padjBH<0.05)])
-
-DIM_targets<-DIM_sig[which(DIM_sig %in% c("P36507","Q02750"))]
-```
-
-Create a table summary
-
-```{r}
-data<-data.frame(Method=c("TPP","NPARC","SCAM","MSstatsTMT"),"pAdj less than 0.05"=c(length(TPP_sig),length(NPARC_sig),length(DIM_sig),length(MSstats_sig)),targetsFound=c(ifelse(length(TPP_targets)==0,0,length(TPP_targets)),ifelse(length(NPARC_targets)==0,0,length(NPARC_targets)),ifelse(length(DIM_targets)==0,0,length(DIM_targets)),ifelse(length(MSstats_targets)==0,0,length(MSstats_targets))))
-data
-```
-
-# Volcano plot for MSstatsTMT
-
-```{r}
-
-
-f<-DIM$ComparisonResult
-f$diffexpressed <- "Not Shifted"
-    f$diffexpressed[f$adj.pvalue < 0.05] <- "Shifted adj. pVal < 0.05"
-    f$diffexpressed[f$adj.pvalue < 0.01] <- "Shifted adj. pVal < 0.01"
-    f$diffexpressed<-as.factor(f$diffexpressed)
-    f$targets<-NA
-    f$delabel <- NA
-    f$others<-NA
-    
-    f$others[which(f$adj.pvalue<0.01)]<-as.character(f$Protein[which(f$adj.pvalue<0.01)])
-    f$targets[f$Protein %in%c("Q7ZUY3","Q6NV46",                 "Q68SP3",# stat5a,
-                                                                           "A4QNT9",# stat5b,
-                                                                           "Q90Y03",# aldh1a2,
-                                                                           "Q0H2G3",# aldh1a3,
-                                                                           "F1QZU7",# aldh1a2.2,
-                                                                           "A2BGR9",# aldh1a2.1,
-                                                                           "F1QLV5",#nqo1,
-                                                                           "F1Q7F3")] <- as.character(f$Protein[f$Protein %in%c("Q7ZUY3","Q6NV46",                 "Q68SP3",# stat5a,
-                                                                           "A4QNT9",# stat5b,
-                                                                           "Q90Y03",# aldh1a2,
-                                                                           "Q0H2G3",# aldh1a3,
-                                                                           "F1QZU7",# aldh1a2.2,
-                                                                           "A2BGR9",# aldh1a2.1,
-                                                                           "F1QLV5",#nqo1,
-                                                                           "F1Q7F3")])
-    f$delabel[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")] <- as.character(f$Protein[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")])
-    flevels<-data.frame(colors=c("#762a83","#b35806","#1b7837"),
-                        labels=c("Shifted adj. pVal < 0.05","Not Shifted","Shifted adj. pVal < 0.01"))
-    flevels<-flevels %>% dplyr::filter(labels %in% unique(f$diffexpressed))
-
-ggplot(f,mapping=aes(x=log2FC,y=log10(adj.pvalue),color=diffexpressed))+geom_point()+xlim(-4,4)+xlab("DIM")+scale_y_reverse()+geom_label_repel(f,mapping=aes(label=targets),color="black",max.overlaps = getOption("ggrepel.max.overlaps", default = 10),
-nudge_x = 3,
-nudge_y=1,
-force = 3)+ylab("log(adj.pvalue)")+xlab("DIM")+theme(text=element_text(size=18))
-```
-
-# Volcano plot for SCAM
-
-```{r}
-
-
-f<-DIM$ComparisonResult
-f$diffexpressed <- "Not Shifted"
-    f$diffexpressed[f$adj.pvalue < 0.05] <- "Shifted adj. pVal < 0.05"
-    f$diffexpressed[f$adj.pvalue < 0.01] <- "Shifted adj. pVal < 0.01"
-    f$diffexpressed<-as.factor(f$diffexpressed)
-    f$targets<-NA
-    f$delabel <- NA
-    f$others<-NA
-    
-    f$others[which(f$adj.pvalue<0.01)]<-as.character(f$Protein[which(f$adj.pvalue<0.01)])
-    f$targets[f$Protein %in%c("Q7ZUY3","Q6NV46",                 "Q68SP3",# stat5a,
-                                                                           "A4QNT9",# stat5b,
-                                                                           "Q90Y03",# aldh1a2,
-                                                                           "Q0H2G3",# aldh1a3,
-                                                                           "F1QZU7",# aldh1a2.2,
-                                                                           "A2BGR9",# aldh1a2.1,
-                                                                           "F1QLV5",#nqo1,
-                                                                           "F1Q7F3")] <- as.character(f$Protein[f$Protein %in%c("Q7ZUY3","Q6NV46",                 "Q68SP3",# stat5a,
-                                                                           "A4QNT9",# stat5b,
-                                                                           "Q90Y03",# aldh1a2,
-                                                                           "Q0H2G3",# aldh1a3,
-                                                                           "F1QZU7",# aldh1a2.2,
-                                                                           "A2BGR9",# aldh1a2.1,
-                                                                           "F1QLV5",#nqo1,
-                                                                           "F1Q7F3")])
-    f$delabel[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")] <- as.character(f$Protein[f$Protein %in%c("P36507","Q02750","P40763","Q9Y2Q5","P31785")])
-    flevels<-data.frame(colors=c("#762a83","#b35806","#1b7837"),
-                        labels=c("Shifted adj. pVal < 0.05","Not Shifted","Shifted adj. pVal < 0.01"))
-    flevels<-flevels %>% dplyr::filter(labels %in% unique(f$diffexpressed))
-
-ggplot(f,mapping=aes(x=log2FC,y=log10(adj.pvalue),color=diffexpressed))+geom_point()+xlim(-4,4)+xlab("DIM")+scale_y_reverse()+geom_label_repel(f,mapping=aes(label=targets),color="black",max.overlaps = getOption("ggrepel.max.overlaps", default = 10),
-nudge_x = 3,
-nudge_y=1,
-force = 3)+ylab("log(adj.pvalue)")+xlab("DIM")+theme(text=element_text(size=18))
-```

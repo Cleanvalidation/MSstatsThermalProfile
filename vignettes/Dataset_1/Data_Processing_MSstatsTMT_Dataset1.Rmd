@@ -46,7 +46,7 @@ theme_set(theme_bw())
 
 ```
 
-# Data Import: Place your PD files in a folder
+# A. Data Import: Place your PD files in a folder
 
 ### Import option 1: Read in your own file
 
@@ -82,7 +82,7 @@ pd_annotation<-Annotation2MSstatsTMT(df,solvent="DMSO",temps=set_temps(10,c(37.3
 
 ```
 
-# Table 1
+#B.  Table 1
 MSstatsTMT data import
 
 ###  Table 1, Steps 1-2
@@ -126,7 +126,7 @@ summarised.proteins$ProteinLevelData<-summarised.proteins$ProteinLevelData|>
                       dplyr::select(Mixture,treatment)|>
                       dplyr::distinct())
 ```
-# Table 2
+#C.  Table 2
 ###  Create a matrix to measure the contrast using a subset of temperatures
 
     ```{r}
@@ -260,7 +260,7 @@ log_file_path = NULL
 
 # Benchmarking with other statistical models
 
-# TPP
+#D.  TPP sigmoid
 
 We start by using the TPP sigmoid method
 
@@ -305,7 +305,7 @@ end=proc.time()
 print(end-start)
 ```
 
-### TPP splines
+#E.  TPP splines
 
 ```{r}
 start=proc.time()
@@ -314,7 +314,7 @@ end=proc.time()
 print(end-start)
 ```
 
-## NPARC
+#F. NPARC
 
 ```{r}
 
@@ -344,7 +344,7 @@ hist(NPARC_test_theo$pVal)
 
 ```
 
-## SCAM Splines
+#G.  SCAM Splines
 
 ```{r}
 
@@ -358,7 +358,7 @@ DIM_Human_SCAM<-compute_pvalues_ATE_RE_F(SCAM_Human_proteins)
 
 ```
 
-## Figures 1 and 2 
+##H. Figures 1 and 2 
 ###Panel C Row 1 
 
 First calculate the total number of proteins from PD
@@ -454,7 +454,7 @@ names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCA
 Dataset_1_psm_results<-Benchmarks_MSstatsTMTproc_p
 saveRDS(Dataset_1_psm_results,"Dataset_1_psm_results.RDS")
 ```
-# Figure 1, panels E-H
+#I. Figure 1, panels E-H
 Append MSstatsTMT fitted models to the data
 
 ```{r}
@@ -470,7 +470,7 @@ DIM_targets<-DIM_late$FittedModel[which(names(DIM_late$FittedModel) %in% c("P365
 fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))
 ```
 
-# Plot the curves Figure 1, panels E-H and save data
+#J.  Plot the curves Figure 1, panels E-H and save data
 
 ```{r}
 targets<-MSstatsproteins|>
@@ -534,7 +534,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 Venn_Humandata<-ggvenn::ggvenn(data=Benchmarks_MSstatsTMTproc_p,fill_color =c("#D95F0E","#FEC44F","#07fff8", "#2C7FB8"),set_name_size=4,stroke_alpha=2,text_size=4,fill_alpha = 0.6,show_percentage = FALSE)+ggtitle("pAdj < 0.05")+theme(text=element_text(size=20))
 Venn_Humandata
 ```
-# Figure 2, Panel D Venn Diagrams (top 3)
+#K. Figure 2, Panel D Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_Humandata_MSstatmid.png",
@@ -569,8 +569,8 @@ Stat_mod<-data.frame(Protein=MSstat_human$Protein,NPARC_adjpval=formatC(NPARC_hu
 
 ```
 
-#Figure 2, panel E
-## Compare Venn Diagrams between processing
+#L. Figure 2, panel E
+##M.  Compare Venn Diagrams between processing
 
 ```{r}
 

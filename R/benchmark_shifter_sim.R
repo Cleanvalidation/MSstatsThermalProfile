@@ -50,17 +50,20 @@ benchmark_shifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_rang
                   BioReplicate=Condition)|>
     dplyr::ungroup()
   template_simulation$Abundance<-ifelse(is.na(template_simulation$Abundance),template_simulation$Abundance[template_simulation$Channel=="131"][1],template_simulation$Abundance)
-  png(filename = "template_MsstatsTMTproc_with_quant.png",
-      width =12, height = 6, units = "in", pointsize = 12,
+  png(filename = "template_MsstatsTMTproc_strong.png",
+      width =1600, height = 1600, units = "px", pointsize = 12,
       res = 600,type ="cairo")
-  Template<-ggplot2::ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point(size=5)+
-    geom_step(linewidth=1)+
+  Template<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,size=treatment,shape=treatment,color=treatment))+
+    geom_point(size=4,alpha=0.5)+
+    geom_step(size=1.1)+
+    scale_size_manual(values=c(8,5))+
     scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
-    labs(title="Simulation template: weak interactor",x="Temperature",y="Log of protein abundances")+theme_bw()+
-    theme(text=element_text(size=20),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    labs(title="Simulation template: strong interactor",x="Temperature",y="Log of protein abundances")+theme_bw()+
+    theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="bottom")+
     annotate("rect", xmin=52.8, xmax = 58.1,ymin=min(template_simulation$Abundance)-0.5,
              ymax=max(template_simulation$Abundance)+0.5,
-             alpha=0.2, fill="#2C7FB8")+ylim(min(template_simulation$Abundance)-0.5,max(template_simulation$Abundance)+0.5)
+             alpha=0.2, fill="#2C7FB8")+
+    ylim(min(template_simulation$Abundance)-0.5,max(template_simulation$Abundance)+0.5)
   Template
   dev.off()
   #define inputs
