@@ -46,7 +46,7 @@ theme_set(theme_bw())
 
 ```
 
-# A. Data Import: Place your PD files in a folder
+# A.Data Import: Place your PD files in a folder
 
 ### Import option 1: Read in your own file
 
@@ -82,10 +82,7 @@ pd_annotation<-Annotation2MSstatsTMT(df,solvent="DMSO",temps=set_temps(10,c(37.3
 
 ```
 
-#B.  Table 1
-MSstatsTMT data import
-
-###  Table 1, Steps 1-2
+#B.  Table 1, Steps 1-2
 Import the data into MSStatsTMT
 
 ```{r}

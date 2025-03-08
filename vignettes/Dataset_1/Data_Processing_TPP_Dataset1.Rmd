@@ -42,7 +42,7 @@ theme_set(theme_bw())
 data("uniqueAccessions")
 ```
 
-#A.  Data Import
+#A.  Table 1, step 1 Data Import
 
 ### Import option 1: Read in your own file
 
@@ -62,7 +62,7 @@ head(PD_df)
 # 
 # PD_df<-proteinSample_HumanData
 ```
-#B. Table 1, step 1
+##Rename columns
 ```{r}
 
 PD_df$Condition<-as.character(PD_df$Condition)
@@ -184,7 +184,7 @@ PD_df_filtered$Mixture<-paste0(PD_df_filtered$treatment,"_",
                                            PD_df_filtered$TechRepMixture)
 ```
 
-#C. Table 1, steps 2 and 6: Normalize the data
+#B. Table 1, steps 2 and 6: Normalize the data
 
 ```{r}
 Human_TPPnorm_Proteins<-TPP_normalization(PD_df,TPPfilters=FALSE,temps=set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67)),reference="126",CARRIER=FALSE)
@@ -261,7 +261,7 @@ DIM_late<-MSstatsThermalProfiler::groupComparisonThermalProfiling(df,
 
 # Benchmarking
 
-#D. TPP sigmoid
+#C. TPP sigmoid
 
 
 ```{r}
@@ -277,7 +277,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#E. TPP splines
+#D. TPP splines
 
 benchmarking splines with F-test
 
@@ -290,7 +290,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#F. NPARC
+#E. NPARC
 
 benchmarking sigmoids with Ftest
 
@@ -322,7 +322,7 @@ hist(NPARC_test_theo$pAdj,breaks=20)
 
 ```
 
-#G.  SCAM Splines
+#F.  SCAM Splines
 
 ```{r}
 
@@ -336,7 +336,7 @@ DIM_Human_SCAM<-compute_pvalues_ATE_RE_F(Human_SCAM_proteins)
   
 ```
 
-#H. Figures 1 and 2
+#G. Figures 1 and 2
 ##Panel C, row 1
 
 For the total number of proteins
@@ -432,7 +432,7 @@ names(Benchmarks_TPPproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat.
 saveRDS(Benchmarks_TPPproc_p,"Human_TPPprocesed.RDS")
 ```
 
-# I. Plot the curves for Figure 1, panels A-D and save data
+# H. Plot the curves for Figure 1, panels A-D and save data
 
 ```{r}
 targets<-Human_TPPnorm_Proteins$normData|>as.data.frame()|>
@@ -460,7 +460,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 ```
 
 
-#J. Figure 2, panel A bar charts
+#I. Figure 2, panel A bar charts
 
 ```{r}
 bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
@@ -491,7 +491,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 
 ```
 
-#K.Figure 2, panel B Venn Diagrams (top 3)
+#J.Figure 2, panel B Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_Dataset1_Tm_TPP.png",
@@ -505,7 +505,7 @@ dev.off()
 ```
 
 
-#L. Figure 2, Panel E
+#K. Figure 2, Panel E
 Compare Venn Diagrams between processing (copy and paste in console)
 
 ```{r}
