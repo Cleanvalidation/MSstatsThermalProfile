@@ -616,25 +616,4 @@ purrr::map2(compare_proc[4],colors[4],function(x,y)VennDiagram::venn.diagram(
 
 ```
 
-#Venn diagram processing
-#Filter expected targets from each result
-
-```{r}
-if(length(Benchmarks_TPPproc_p$`NPARC`)==0){
-  NPARC_human<-data.frame(id=rep(NA,2),pAdj=rep(1,2))
-}else{
-  NPARC_human<-NPARC_test_emp|>dplyr::filter(id %in% c("P36507","Q02750"))
-}
-TPP_human<-TPP_Human_results_F|>dplyr::filter(uniqueID %in% c("P36507","Q02750"))
-
-SCAM_human<-DIM_Human_SCAM|>dplyr::filter(Accession %in% c("P36507","Q02750"))
-
-MSstat_human<-DIM$ComparisonResult|>dplyr::filter(Protein%in%c("P36507","Q02750"))
-
-
-Stat_mod<-data.frame()
-Stat_mod<-data.frame(Protein=unique(MSstat_human$Protein))|>dplyr::mutate(NPARC_adjpval=NPARC_human$pAdj,TPP_adjpval=TPP_human$p_adj_NPARC,SCAM_adjpval=SCAM_human$ATE_padjBH,MSstats_adjpval=MSstat_human$adj.pvalue)
-
-
-```
-
+#
