@@ -262,7 +262,7 @@ log_file_path = NULL
 
 #D.  TPP sigmoid
 
-We start by using the TPP sigmoid method
+
 
 ```{r}
 
@@ -454,7 +454,6 @@ names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCA
 Dataset_1_psm_results<-Benchmarks_MSstatsTMTproc_p
 saveRDS(Dataset_1_psm_results,"Dataset_1_psm_results.RDS")
 ```
-#I. Figure 1, panels E-H
 Append MSstatsTMT fitted models to the data
 
 ```{r}
@@ -470,7 +469,7 @@ DIM_targets<-DIM_late$FittedModel[which(names(DIM_late$FittedModel) %in% c("P365
 fitted_MSstat<-purrr::map2(targets,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))
 ```
 
-#J.  Plot the curves Figure 1, panels E-H and save data
+#I.  Plot the curves Figure 1, panels E-H and save data
 
 ```{r}
 targets<-MSstatsproteins|>
@@ -497,7 +496,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 target_curves$Q02750
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_spline_Q02750.tiff")
 ```
-###Figure 2, Panel C bar charts
+#J. Figure 2, Panel C bar charts
 Plot the bar charts
 
 ```{r}
@@ -570,7 +569,7 @@ Stat_mod<-data.frame(Protein=MSstat_human$Protein,NPARC_adjpval=formatC(NPARC_hu
 ```
 
 #L. Figure 2, panel E
-##M.  Compare Venn Diagrams between processing
+##Compare Venn Diagrams between processing
 
 ```{r}
 
