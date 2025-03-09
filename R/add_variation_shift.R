@@ -45,7 +45,7 @@ add_variation_shift<-function(template,icc,n_conditions,n_replicates,re_var,t_ra
   biovar<-(re_var)/(1/icc-1)
 
   #select  the abundances at the specified temperatures and replicate the fitted values for each TMT 10-plex and each condition
-  if(n_temps==1 & design!="hybrid"){#in this case the input has 1 row and 40 cols, each column being a separate subject
+  if(n_temps==1 & design!="OnePot"){#in this case the input has 1 row and 40 cols, each column being a separate subject
     #take the temperature index from the input
     template<-template|>dplyr::group_by(Condition,TechRepMixture)|>dplyr::group_split()
     template<-lapply(template,function(x) x|>dplyr::mutate(Abundance=rep(x$Abundance[t_range],n_replicates/n_conditions),
@@ -102,7 +102,7 @@ add_variation_shift<-function(template,icc,n_conditions,n_replicates,re_var,t_ra
     result$Condition<-paste0(result$temperature,"_",result$treatment)
     result$Channel<-unique(template$Channel)[t_range]
     result$TechRepMixture<-1
-  }else if(n_temps==1 & design=="hybrid"){#If this is a one-pot hybrid design
+  }else if(n_temps==1 & design=="OnePot"){#If this is a one-pot hybrid design
     n_temps<-10
     n_subjects<-1
     # create an empty matrix to store modified responses

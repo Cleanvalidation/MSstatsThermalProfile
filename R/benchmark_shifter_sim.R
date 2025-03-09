@@ -1,4 +1,4 @@
-benchmark_shifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="hybrid"){
+benchmark_shifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot"){
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   if(any(names(msstats_icc_output)=="df_with_variance")){
