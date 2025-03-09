@@ -132,8 +132,7 @@ comparison<-make_contrast_matrix(df3,temps=c("53.8","57.1","60.4"))
 comparison
 ```
 
-### Fit linear mixed models with groupComparisons from MSstatsTMT
-
+#C. As in Figure 5, panel F to fit linear mixed models with groupComparisons from MSstatsTMT
 ```{r}
 DIM<-MSstatsTMT::groupComparisonTMT(
   df3,
@@ -152,7 +151,7 @@ DIM<-MSstatsTMT::groupComparisonTMT(
 
 # Benchmarking
 
-#C. TPP sigmoid
+#D. TPP sigmoid
 
 ```{r}
 
@@ -163,7 +162,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#D. TPP splines
+#E. TPP splines
 
 We start by benchmarking the summarised proteins with TPP
 
@@ -176,7 +175,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#E. NPARC
+#F. NPARC
 
 ```{r}
 
@@ -189,14 +188,14 @@ NPARC_Zebra_fits <-NPARC::NPARCfit(x =proteins$temperature,
                  returnModels = TRUE)
 ```
 
-## Empirical test
+### Empirical test
 
 ```{r}
 NPARC_test_emp<-NPARC::NPARCtest(NPARC_Zebra_fits$metrics,dfType="empirical")
 hist(NPARC_test_emp$pVal,breaks=20)
 ```
 
-## Theoretical test
+### Theoretical test
 
 ```{r}
 NPARC_test_theo<-NPARC::NPARCtest(NPARC_Zebra_fits$metrics,dfType="theoretical")
@@ -205,7 +204,7 @@ hist(NPARC_test_theo$pVal,breaks=20)
 
 ```
 
-#F. SCAM Splines
+#G. SCAM Splines
 
 ```{r}
 
@@ -219,7 +218,7 @@ DIM_Zebra<-compute_pvalues_ATE_RE_F(Zebra_SCAM_proteins)
 
 ```
 
-#G. Figure S-14 and Figure-S23 
+#H. Figure S-14 and Figure-S23 
 ##Panel C, row 1 (Figure S-23)
 For the total number of proteins
 
@@ -379,7 +378,7 @@ names(Benchmarks_TPPproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat.
 saveRDS(Benchmarks_TPPproc_p,"Dataset2_TPPprocesed.RDS")
 ```
 
-#H. Plot the curves for Figures S-12 and S-14, panels A-D and save data
+#I. Plot the curves for Figures S-12 and S-14, panels A-D and save data
 
 ```{r}
 targets<-proteins|>as.data.frame()|>dplyr::filter(Protein%in% c(#"Q7ZUY3",#histone
@@ -416,7 +415,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 
 ```
 
-#I. Figure S-23, panel A bar charts
+#J. Figure S-23, panel A bar charts
 
 ```{r}
 bar_Zebra<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
@@ -444,7 +443,7 @@ path = getwd()
 bZebra
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Bar_charts_TPP.tiff")
 ```
-#J. Figure S-23 panel B Venn Diagrams (top 3)
+#K. Figure S-23 panel B Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_ZebradataTPP_3.png",
@@ -468,7 +467,7 @@ Venn_Zebradata
 ```
 
 
-#K. Figure S-23, Panel E
+#L. Figure S-23, Panel E
 Compare Venn Diagrams between processing (copy and paste the section in console)
 
 ```{r}

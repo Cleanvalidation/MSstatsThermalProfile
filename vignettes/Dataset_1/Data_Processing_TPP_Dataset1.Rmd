@@ -42,7 +42,7 @@ theme_set(theme_bw())
 data("uniqueAccessions")
 ```
 
-#A.  Table 1, step 1 Data Import
+s#A.  Table 1, step 1 Data Import
 
 ### Import option 1: Read in your own file
 
@@ -110,7 +110,7 @@ PD_df$BioReplicate<-paste0(PD_df$treatment,"_",PD_df$TechRepMixture)
 
 
 ```
-###Get a sense of missing value distributions
+###Check missing value distributions
 
 ```{r}
 #separate data into accessions and plexes

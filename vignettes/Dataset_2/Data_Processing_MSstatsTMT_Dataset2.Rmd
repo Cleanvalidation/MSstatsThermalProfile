@@ -163,54 +163,7 @@ summarised.proteins$ProteinLevelData<-summarised.proteins$ProteinLevelData|>dply
     comparison_ear<-make_contrast_matrix(df3,temps=temps_ear)
       
     ```
-###  Fit linear mixed models with groupComparisons from MSstatsTMT
-```{r}
-
-DIM_late<-groupComparisonThermalProfiling(
-  df3,
-  contrast.matrix = comparison_late,
-  moderated = FALSE,
-  adj.method = "BH",
-  remove_norm_channel = TRUE,
-  remove_empty_channel = TRUE,
-  save_fitted_models = TRUE,
-  use_log_file = FALSE,
-  append = FALSE,
-  verbose = TRUE,
-  log_file_path = NULL,
-  
-)
-
-DIM_mid<-MSstatsTMT::groupComparisonTMT(
-  df3,
-  contrast.matrix = comparison_mid,
-  moderated = FALSE,
-  adj.method = "BH",
-  remove_norm_channel = TRUE,
-  remove_empty_channel = TRUE,
-  save_fitted_models = TRUE,
-  use_log_file = FALSE,
-  append = FALSE,
-  verbose = TRUE,
-  log_file_path = NULL
-)
-
-DIM_ear<-MSstatsTMT::groupComparisonTMT(
-  df3,
-  contrast.matrix = comparison_ear,
-  moderated = FALSE,
-  adj.method = "BH",
-  remove_norm_channel = TRUE,
-  remove_empty_channel = TRUE,
-  save_fitted_models = TRUE,
-  use_log_file = FALSE,
-  append = FALSE,
-  verbose = TRUE,
-  log_file_path = NULL
-)
-```
-### Fit models using filtered data which only considers the variance from the selected contrasts
-
+#D. As in Figure 5, panel E Fit models using filtered data which only considers the variance from the selected contrasts
 ```{r}
 early_data<-list()
 middle_data<-list()
@@ -268,10 +221,56 @@ verbose = TRUE,
 log_file_path = NULL
 )
 ```
+#E. As in Figure 5, panel F to fit linear mixed models with groupComparisons from MSstatsTMT
+```{r}
+
+DIM_late<-groupComparisonThermalProfiling(
+  df3,
+  contrast.matrix = comparison_late,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL,
+  
+)
+
+DIM_mid<-MSstatsTMT::groupComparisonTMT(
+  df3,
+  contrast.matrix = comparison_mid,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
+)
+
+DIM_ear<-MSstatsTMT::groupComparisonTMT(
+  df3,
+  contrast.matrix = comparison_ear,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
+)
+```
 
 # Benchmarking
 
-#D. TPP sigmoid
+#F. TPP sigmoid
 
 We use TPPtr to perform filtering by R\^2 and plateau
 
@@ -311,7 +310,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#E. TPP splines
+#G. TPP splines
 ```{r}
 
 #Run TPP spline and implement the NPARC F-test with 5 DF
@@ -321,7 +320,7 @@ end=proc.time()
 print(end-start)
 ```
 
-#F. NPARC
+#H. NPARC
 
 ```{r}
 
@@ -358,13 +357,13 @@ Zebra_SCAM_proteins<-MSstatstoSCAM(proteins1)
 head(Zebra_SCAM_proteins)
 
 ```
-#G. SCAM splines
+#I. SCAM splines
 ```{r}
 DIM_Zebra<-compute_pvalues_ATE_RE_F(Zebra_SCAM_proteins)
 
 ```
 
-#H. Figures S-12, S-14 and S-23
+#J. Figures S-12, S-14 and S-23
 
 ###Panel C Row 1
 
@@ -522,7 +521,7 @@ names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCA
 
 saveRDS(Benchmarks_MSstatsTMTproc_p,"Zebra_MSstatsTMTprocesed.RDS")
 ```
-#I. Plot the curves Figures S-12 and S-14, panels E-H and save data
+#K. Plot the curves Figures S-12 and S-14, panels E-H and save data
 
 ```{r}
 targets<-summarised.proteins$ProteinLevelData|>as.data.frame()|>dplyr::filter(Protein%in% c("Q6NV46","Q68SP3","Q0H2G3"))|>dplyr::mutate(Accession=Protein)|>dplyr::inner_join(Stat_mod)|>dplyr::group_by(Accession)|>dplyr::group_split()
@@ -544,7 +543,7 @@ target_curves$Q6NV46
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q6NV46.tiff")
 ```
 
-#J. Figure S-23, Panel C bar charts
+#L. Figure S-23, Panel C bar charts
 
 ```{r}
 bar_Dataset2<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_MSstatsTMTproc_n,Benchmarks_MSstatsTMTproc_filt_n,Benchmarks_MSstatsTMTproc_p_n)
@@ -584,7 +583,7 @@ Venn_Dataset2data_MSstats<-ggvenn::ggvenn(data=Benchmarks_MSstatsTMTproc_p,fill_
 Venn_Dataset2data_MSstats
 ```
 
-#K. Figure S-23, Panel D Venn Diagrams (top 3)
+#M. Figure S-23, Panel D Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_Dataset2data_MSstat3.png",
@@ -596,7 +595,7 @@ ggvenn::ggvenn(data=Benchmarks_MSstatsTMTproc_p[c(1,2,4)],fill_color =c("#D95F0E
 
 dev.off() 
 ```
-#L. Figure S-23, panel E
+#N. Figure S-23, panel E
 ##Compare Venn Diagrams between processing
 
 ```{r}
