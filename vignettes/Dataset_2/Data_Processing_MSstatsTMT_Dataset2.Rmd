@@ -364,7 +364,7 @@ DIM_Zebra<-compute_pvalues_ATE_RE_F(Zebra_SCAM_proteins)
 
 ```
 
-#H. Figures 1 and 2
+#H. Figures S-12, S-14 and S-23
 
 ###Panel C Row 1
 
@@ -522,7 +522,7 @@ names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCA
 
 saveRDS(Benchmarks_MSstatsTMTproc_p,"Zebra_MSstatsTMTprocesed.RDS")
 ```
-#I. Plot the curves Figure 1, panels E-H and save data
+#I. Plot the curves Figures S-12 and S-14, panels E-H and save data
 
 ```{r}
 targets<-summarised.proteins$ProteinLevelData|>as.data.frame()|>dplyr::filter(Protein%in% c("Q6NV46","Q68SP3","Q0H2G3"))|>dplyr::mutate(Accession=Protein)|>dplyr::inner_join(Stat_mod)|>dplyr::group_by(Accession)|>dplyr::group_split()
@@ -544,7 +544,7 @@ target_curves$Q6NV46
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q6NV46.tiff")
 ```
 
-#J. Figure 2, Panel C bar charts
+#J. Figure S-23, Panel C bar charts
 
 ```{r}
 bar_Dataset2<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_MSstatsTMTproc_n,Benchmarks_MSstatsTMTproc_filt_n,Benchmarks_MSstatsTMTproc_p_n)
@@ -584,7 +584,7 @@ Venn_Dataset2data_MSstats<-ggvenn::ggvenn(data=Benchmarks_MSstatsTMTproc_p,fill_
 Venn_Dataset2data_MSstats
 ```
 
-#K. Figure 2, Panel D Venn Diagrams (top 3)
+#K. Figure S-23, Panel D Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_Dataset2data_MSstat3.png",
@@ -596,7 +596,7 @@ ggvenn::ggvenn(data=Benchmarks_MSstatsTMTproc_p[c(1,2,4)],fill_color =c("#D95F0E
 
 dev.off() 
 ```
-#L. Figure 2, panel E
+#L. Figure S-23, panel E
 ##Compare Venn Diagrams between processing
 
 ```{r}

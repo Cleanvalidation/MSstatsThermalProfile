@@ -219,8 +219,8 @@ DIM_Zebra<-compute_pvalues_ATE_RE_F(Zebra_SCAM_proteins)
 
 ```
 
-#G. Figures 1 and 2
-##Panel C, row 1
+#G. Figure S-14 and Figure-S23 
+##Panel C, row 1 (Figure S-23)
 For the total number of proteins
 
 ```{r}
@@ -379,7 +379,7 @@ names(Benchmarks_TPPproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat.
 saveRDS(Benchmarks_TPPproc_p,"Dataset2_TPPprocesed.RDS")
 ```
 
-#H. Plot the curves for Figure 1, panels A-D and save data
+#H. Plot the curves for Figures S-12 and S-14, panels A-D and save data
 
 ```{r}
 targets<-proteins|>as.data.frame()|>dplyr::filter(Protein%in% c(#"Q7ZUY3",#histone
@@ -416,7 +416,7 @@ ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, f
 
 ```
 
-#I. Figure 2, panel A bar charts
+#I. Figure S-23, panel A bar charts
 
 ```{r}
 bar_Zebra<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
@@ -444,7 +444,7 @@ path = getwd()
 bZebra
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Bar_charts_TPP.tiff")
 ```
-#J. Venn Diagrams (top 3)
+#J. Figure S-23 panel B Venn Diagrams (top 3)
 
 ```{r}
 png(filename = "Venn_ZebradataTPP_3.png",
@@ -468,7 +468,7 @@ Venn_Zebradata
 ```
 
 
-#K. Figure 2, Panel E
+#K. Figure S-23, Panel E
 Compare Venn Diagrams between processing (copy and paste the section in console)
 
 ```{r}
