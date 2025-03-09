@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 
 ---
-title: "Data_Processing_MSstatsTMT"
+title: "Comparison OnePot MSstatsTMT"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
@@ -38,7 +38,7 @@ theme_set(theme_bw())
 
 ```
 
-# Data Import
+#A. Data Import
 
 ### Import option 1: Read in your own file
 
@@ -53,7 +53,7 @@ theme_set(theme_bw())
 
 ```
 
-# Import option 3: Read PSM file from folder
+### Import option 2: Read PSM file from folder
 
 ```{r}
 CETSA_OnePot<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_PSMs.txt")
@@ -64,9 +64,8 @@ df<-CETSA_OnePot
 head(CETSA_OnePot)
 ```
 
-# Annotation File Generation
-
-## Read annotation file
+#B. Annotation File Import
+Read annotation file
 
 ```{r}
 CETSA_OnePot_annotation<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPP_annotation.csv")
@@ -78,9 +77,9 @@ CETSA_OnePot_annotation$Condition<-stringr::str_remove(CETSA_OnePot_annotation$B
 
 ```
 
-# Data processing with MSstatsTMT
+#C. Data processing with MSstatsTMT
 
-1.  Import the data into MSStatsTMT
+Import the data into MSStatsTMT
 
 ```{r}
 
@@ -97,8 +96,7 @@ processed.features <- MSstatsTMT::PDtoMSstatsTMTFormat(CETSA_OnePot,
                                                     append=FALSE,
                                                     verbose=TRUE)
 ```
-
-2.  Summarize the peptide data into proteins
+#D. Summarize the peptide data into proteins
 
 ```{r}
 
@@ -113,28 +111,14 @@ summarised.proteins <- MSstatsTMT::proteinSummarization(data = processed.feature
                                 remove_norm_channel=FALSE,
                                 remove_empty_channel=FALSE)
 ```
-
-3.  Visualize a profile plot for MEK2
+#E. Visualize a profile plot for MEK2
 
     ```{r}
 
     MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="P36507")
     ```
 
-4.  Create a contrast matrix to measure the DIM
-
-    ```{r}
-    df3<-list()
-
-    df3$ProteinLevelData<-summarised.proteins$ProteinLevelData
-
-
-    #Choose conditions
-
-      
-    ```
-
-5.  Fit linear mixed models with groupComparisons from MSstatsTMT
+#F. Fit linear mixed models with groupComparisons from MSstatsTMT
 
 ```{r}
 DIM_OnePot<-groupComparisonTMT(
@@ -152,8 +136,7 @@ DIM_OnePot<-groupComparisonTMT(
 )
 
 ```
-
-# Compare DMSO vs 25x staurosporine
+#G. Compare DMSO vs 25x staurosporine
 
 ```{r}
 contrast.matrix<-matrix(nrow=1,ncol=5)
@@ -174,8 +157,7 @@ DIM_OnePot_DMSOvs25x<-groupComparisonTMT(
   log_file_path = NULL
 )
 ```
-
-# Compare DMSO vs all concentrations on avg
+#H. Compare DMSO vs all concentrations on avg
 
 ```{r}
 contrast.matrix<-matrix(nrow=1,ncol=5)
@@ -198,9 +180,7 @@ DIM_OnePot_DMSOvsAllAvg<-groupComparisonThermalProfiling(
   replacement=list("131_vehicle" = c("130C_vehicle"))
 )
 ```
-
-## Get Kinase compiled from Xu *et. al.*
-
+#I. Read in Human Kinome accessions and remove isoforms
 ```{r}
 WD<-"~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/"
 h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
@@ -218,8 +198,7 @@ df<-df|>dplyr::mutate(Accession=stringr::str_remove(Master.Protein.Accessions,"-
 kinase_df<-kinases|>dplyr::inner_join(df,relationship="many-to-many")|>dplyr::select(Accession) |> dplyr::distinct()
 
 ```
-
-## Collect MSstats interactors
+#J. MSstats interactors
 
 ```{r}
 #collect interactions from MSstatsTMT
@@ -230,10 +209,29 @@ MSstat_hits<-MSstat_hits[!stringr::str_detect(MSstat_hits,";")]
 
 ```
 
+#K. Figure 4, panel E,  Read in MSstatsTMT processed results with TPP statistical models to compare against OnePot
 
-# Compare full curve TPP vs OnePot and OnePot MSstatsTMT
 
-NPARC
+```{r}
+
+#add benchmarks to original full curve designs
+Benchmarks_external<-append(list("3a: MSstatsTMT proc. 
+TPP stat.mod."=Thermal_lateMSstatsTMTprocesed$`TPP temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: MSstatsTMT proc. 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+png(filename = "VennTPP_Fulltemp_vs_OnePot_MSstatsTMTproc_unique_Median.png",
+    width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#D95F0E","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+dev.off() 
+```
+
+#K. Figure 4, panel F,  Read in MSstatsTMT processed results with NPARC statistical models to compare against OnePot
 
 ```{r}
 names(Thermal_lateMSstatsTMTprocesed)<-c("TPP temp.","NPARC temp.","SCAM temp.","MSstatsTMT temp.")
@@ -256,30 +254,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#FEC44F","#7b057b","#1d54
 dev.off() 
 
 ```
-
-TPP
-
-```{r}
-
-#add benchmarks to original full curve designs
-Benchmarks_external<-append(list("3a: MSstatsTMT proc. 
-TPP stat.mod."=Thermal_lateMSstatsTMTprocesed$`TPP temp.`),list(
-  "Reference set"=na.omit(kinases$Accession),
-                         "3b: MSstatsTMT proc. 
-  OnePotMSstatsTMT stat. mod."=MSstat_hits))
-
-png(filename = "VennTPP_Fulltemp_vs_OnePot_MSstatsTMTproc_unique_Median.png",
-    width =12, height = 6, units = "in", pointsize = 12,
-    res = 600,type ="cairo")  
-
-library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#D95F0E","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
-
-dev.off() 
-```
-
-SCAM
-
+#L. Figure 4, panel G,  Read in MSstatsTMT processed results with SCAM statistical models to compare against OnePot
 ```{r}
 #add benchmarks to original full curve designs
 Benchmarks_external<-append(list("3a: MSstatsTMT proc. 
@@ -298,8 +273,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#07fff8","#7b057b","#1d54
 
 dev.off() 
 ```
-
-MSstatsTMT
+#M. Figure 4, panel H,  Read in MSstatsTMT processed results with MSstatsTMT statistical models to compare against OnePot
 
 ```{r}
 #add benchmarks to original full curve designs
@@ -319,7 +293,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d54
 dev.off() 
 ```
 
-# Plot profile plots
+#N. Figure 8, panel E: profile plots for MEK2
 
 ```{r}
 #Rename columns for Conditions
@@ -347,7 +321,7 @@ MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Pro
 MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="Q9UBS4")
 MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="P16083")
 ```
-#Compare MSstatsTMT statistical modeling with full curves using MSstatsTMT at the Protein and PSM level
+#I. Figure 8, panel A: Venn Diagram for MSstatsTMT compared to the reference set and PD protein summary
 ```{r}
 
  
@@ -366,7 +340,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#1d547a","#7b057b","#1d54
 
 dev.off() 
 ```
-#Compare MSstatsTMT statistical modeling with OnePot using MSstatsTMT at the Protein and PSM level
+#J.Figure 8, panel D: Venn Diagram for MSstatsTMT compared to the reference set and PD protein summary
 ```{r}
 
  

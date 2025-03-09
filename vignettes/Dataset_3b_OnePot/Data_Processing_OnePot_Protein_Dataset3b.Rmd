@@ -206,7 +206,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#07fff8","#7b057b","#1d54
 dev.off() 
 ```
 
-#H. Figure 4, panel D: Read in TPP processed PD results with MSstatsTMT statistical models to compare against OnePot
+#H. Figure 8, panel D: Read in TPP processed PD results with MSstatsTMT statistical models to compare against OnePot
 
 ```{r}
 Benchmarks_external<-append(list("3a: TPP proc. 
