@@ -1,8 +1,8 @@
-plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_replicates_per_plex=10){
+plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_range=seq(1,10), n_replicates_per_plex=10){
   #QC plot of the simulation with 5 icc values
   #define an icc column based on the protein ID
   result$ICC<-stringr::str_extract(result$Protein,"icc_[:digit:].[[:digit:]]+")
-  if(any(result$Condition==1)){
+  if(any(result$Condition==1)){#If this is a OnePot design, assign one temperature by default
     result$treatment<-ifelse(result$Condition==1,"vehicle","treated")
 
     result$Condition<-result$treatment
@@ -12,6 +12,11 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
     }
   }else{
     result$treatment<-result$Condition
+  }
+  temps<-unique(result$temperature)[t_range]
+  if(n_replicates_per_plex==1&length(t_range)==2){
+    result<-result|>
+      dplyr::filter(temperature %in% temps)
   }
   if(n_replicates_per_plex==10){
     result<-result|>
@@ -69,7 +74,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
   png(filename = paste0("ProfilePlots_",shifter,design,"_MsstatsTMTproc.png"),
       width =1600, height = 1600, units = "px", pointsize = 12,
       res = 130,type ="cairo")
-  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=Condition,y=Abundance,color=treatment))+geom_point()+
+  Profile_plot<-ggplot(One_prot_ICC,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point()+
     geom_step(size=1.1)+
     ylab(expression(log[2]~Abundance))+
     ggtitle(paste0("Simulation template: ",shifter, " interaction"))+
@@ -101,14 +106,14 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
   ATE_MSstats$ComparisonResult<-ATE_MSstats$ComparisonResult[stringr::str_detect(ATE_MSstats$ComparisonResult$ICC,"5|40"),]
   ATE_MSstats$ComparisonResult<-ATE_MSstats$ComparisonResult|>dplyr::group_by(ICC)|>dplyr::mutate(Sens=100*sum(pvalue<0.001)/length(unique(Protein)))
   png(filename = paste0("Histogram_",shifter,design,"_MsstatsTMTproc.png"),
-      width =600, height = 600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
+      width =12, height = 6, units = "in", pointsize = 12,
+      res = 600,type ="cairo")
   if(design=="onePot"){
     if(shifter=="strong"){
     MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
       geom_histogram(fill="#030366",color="black",bins=1,binwidth = 0.025)+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
       coord_cartesian(xlim = c(0, 1))+ylim(0,1000)+xlab("pvalue")+
-      theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
+      theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
       scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
       geom_text(mapping=aes(x=0.5,y=800),
                 label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")
@@ -116,7 +121,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
       MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
         geom_histogram(fill="#030366",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
         scale_x_continuous(n.breaks=8)+ylim(0,1000)+xlab("pvalue")+
-        theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
+        theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
         scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
         geom_text(mapping=aes(x=0.5,y=800),
                   label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")
@@ -125,7 +130,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
   MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
     geom_histogram(fill="#2C7FB8",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
     ylim(0,1000)+xlab("pvalue")+ scale_x_continuous(n.breaks=8)+
-    theme(text=element_text(size=15),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
+    theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
     scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
     geom_text(mapping=aes(x=0.5,y=800),
               label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")

@@ -1,0 +1,191 @@
+---
+title: "Simulation_dataset5"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulation_dataset5}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MSstatsThermalProfiler)
+library(ggplot2)
+library(tidyr)
+library(MSstats)
+library(MSstatsTMT)
+```
+
+# Simulations
+
+#A. Read in MSstatsTMT summarised protein output:  Dataset 1-Phaneuf *et al.*
+
+Load in MSstatsTMT processed data
+
+```{r}
+#read summarised protein output from MSstatsTMT
+summarised.proteins<- readRDS("~/MSstatsThermalProfiler/vignettes/Dataset_3a-b_simulation_data/summarised.proteinsD1.RDS")
+```
+
+#B.Figure 5, panel D design: 4 TMT 10-plexes, 4 biological replicates and 10 temperatures 
+###Print out ICC distributions with MSstatsTMT and simulate a strong shifter for a design with a strong interactor(Panel A)
+
+```{r}
+#get variance components
+Dataset_1_ICC<-msstats_icc(summarised.proteins,temps=unique(summarised.proteins$ProteinLevelData$temperature))
+#generate simulations
+Thermal_4plex_4strong<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms for MSstatsTMT
+Ten_temps_4plex_4rep<-plot_benchmarks_MSstatsTMT(Thermal_4plex_4strong,design="TPP",shifter="strong")
+```
+### Simulate a weak shifter(Panel B) 
+```{r}
+
+#generate simulations
+Thermal_4plex_4rep_weak_10temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+Ten_temps_4plex_4rep_weak_10temps<-plot_benchmarks_MSstatsTMT(Thermal_4plex_4rep_weak_10temps,design="TPP",shifter="weak")
+```
+
+### Print out ICC distributions with MSstatsTMT and simulate a design with a non interactor(Panel C) 
+ 
+```{r}
+#read in Zebradata 
+summarised.proteinsZebra <- readRDS("~/MSstatsThermalProfiler/vignettes/Dataset_3a-b_simulation_data/summarised.proteinsZebra.RDS")
+#generate ICC distribution for all summarised proteins for Dataset 2 with MSstatsTMT processing
+Dataset_2_ICC<-msstats_icc(summarised.proteinsZebra,temps=unique(summarised.proteinsZebra$ProteinLevelData$temperature))
+#Generate simulations for true negative accession
+Thermal_4plex_non<-benchmark_nonshifter_sim(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(1,10),design="TPP")
+#plot histograms for MSstatsTMT
+Ten_temps_4plex_4rep_non<-plot_benchmarks_MSstatsTMT(Thermal_4plex_non,design="TPP",shifter="non")
+```
+
+#C. Figure 5, panel E: for a design with 4 TMT 10-plexes, 1 biological replicate per mixture, 2 temperatures per plex and 2 temperatures as contrast
+###Print out ICC distributions and simulate a strong shifter(Panel A) 
+
+```{r}
+#generate simulations
+Thermal_4plex_1repplex_strong_alltemps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+All_temps_4plex_1repplex_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_strong_alltemps,design="TPP",shifter="strong",t_range=seq(1,2),n_replicates_per_plex=1)
+```
+### Print out ICC distributions and simulate a weak shifter(Panel B) 
+
+```{r}
+#generate simulations
+Thermal_4plex_1repplex_weak_alltemps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+All_temps_4plex_1repplex_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_weak_alltemps,design="TPP",shifter="weak",t_range=seq(1,2),n_replicates_per_plex=1)
+```
+### Print out ICC distributions and simulate a non shifter(Panel C) 
+
+```{r}
+#generate simulations
+Thermal_4plex_1repplex_non_alltemps<-benchmark_nonshifter_sim(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+All_temps_4plex_1repplex_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_non_alltemps,design="TPP",shifter="non",t_range=seq(1,2),n_replicates_per_plex=1)
+```
+
+#D. Figure 5, panel F: for a design with 4 TMT 10-plexes, 1 biological replicates per mixture and 2 temperatures as a contrast with variance components from all 10 temperatures 
+###Print out ICC distributions and simulate a strong shifter(Panel A)
+
+```{r}
+#generate simulations
+Thermal_4plex_4rep_strong_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+Two_temps_4plex_4rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_strong_2temps,design="TPP",shifter="strong",t_range=seq(1,10),n_replicates_per_plex=1)
+```
+### Simulate a weak shifter(Panel B) 
+
+```{r}
+#generate simulations
+Thermal_4plex_4rep_weak_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(1,10),design="TPP")
+
+#plot histograms
+Two_temps_4plex_4rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_weak_2temps,design="TPP",shifter="strong",t_range=seq(1,10),n_replicates_per_plex=1)
+```
+### Simulate a weak shifter(Panel C) 
+
+```{r}
+#generate simulations
+Thermal_4plex_4rep_non_2temps<-benchmark_nonshifter_sim(Dataset_2_ICC,
+                                                     templateProtein="Q6NV46",
+                                                     n_sims=1000,
+                                                     t_range=seq(1,10),
+                                                     design="TPP")
+
+#plot histograms
+Two_temps_4plex_4rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_non_2temps,design="TPP",shifter="non",t_range=seq(1,10),n_replicates_per_plex=1)
+```
+
+#E.Figure 5, panel G: for a design with two temperatures, 4 plexes, 5 replicates per plex
+### Print out ICC distributions and simulate a strong shifter(panel A)
+
+```{r}
+#generate simulations
+Thermal_4plex_5rep_strong_alltemps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="TPP")
+
+#plot histograms
+All_temps_4plex_5rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_strong_alltemps,design="TPP",shifter="strong",n_replicates_per_plex=5)
+```
+### Print out ICC distributions and simulate a weak shifter(panel B)
+
+```{r}
+#generate simulations
+Thermal_4plex_5rep_weak_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="TPP")
+
+#plot histograms
+All_temps_4plex_5rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_weak_2temps,design="TPP",shifter="weak",n_replicates_per_plex=5)
+```
+### Print out ICC distributions and simulate a non shifter(panel C)
+
+```{r}
+#generate simulations
+Thermal_4plex_5rep_non_2temps<-benchmark_nonshifter_sim(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="TPP")
+
+#plot histograms
+All_temps_4plex_5rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_non_2temps,design="TPP",shifter="non",n_replicates_per_plex=5)
+```
+
+
+#F. If comparing with TPP splines, use these functions:
+###Compare simulations with TPP statistical model for a design with a strong interactor(Panel A) with 4 TMT 10-plexes, 4 biological replicates and 10 temperatures
+
+```{r}
+#plot histograms for TPP
+Ten_temps_4plex_4rep_TPP<-plot_benchmarksTPP(Thermal_4plex_4strong,
+                                             temps=unique(Thermal_4plex_4strong$temperature),
+                                             shifter="strong",
+                                             design="TPP")
+```
+ 
+###Compare simulations with TPP statistical model for a design with a weak interactor(Panel B) with 4 TMT 10-plexes, 4 biological replicates and 10 temperatures
+
+```{r}
+#plot histograms for MSstatsTMT
+Ten_weak_4plex_4rep_TPP<-plot_benchmarksTPP(Thermal_4plex_4rep_weak_10temps,
+                                             temps=unique(Thermal_4plex_4rep_weak_10temps$temperature),
+                                             shifter="weak",
+                                             design="TPP")
+
+```
+
+###Compare simulations with TPP statistical model for a design with a non interactor(Panel C) with 4 TMT 10-plexes, 4 biological replicates and 10 temperatures
+```{r}
+
+#save histograms for TPP
+Ten_temps_4plex_non_TPP<-plot_benchmarksTPP(Thermal_4plex_non,design="TPP",shifter="non")
+
+```
