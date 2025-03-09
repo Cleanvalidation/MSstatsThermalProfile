@@ -171,8 +171,7 @@ no_norm<-list(ProteinLevelData=no_norm)
         comparison_ear<-make_contrast_matrix(df3,temps=temps_ear)
       df3$ProteinLevelData$temperature<-as.numeric(df3$ProteinLevelData$temperature)
     ```
-#D. Fig. 5 Panel E design
-
+#D. As in Figure 5, panel E: fit linear mixed models with groupComparisons from MSstatsTMT
 ```{r}
 early_data<-list()
 middle_data<-list()
@@ -231,7 +230,7 @@ log_file_path = NULL
 )
 ```
 
-#E. Figure 5, panel F Fit linear mixed models with groupComparisons from MSstatsTMT
+#E. As in Figure 5, panel F: Fit linear mixed models with groupComparisons from MSstatsTMT
 
 ```{r}
 DIM_late<-groupComparisonThermalProfiling(
@@ -372,7 +371,7 @@ df<-df$ProteinLevelData|>dplyr::mutate(Accession=stringr::str_remove(uniqueID,"-
 kinase_df<-kinases
 ```
 
-# J. Figures 1 and 2
+# J. Figures 3, S-17 S-19 and S-21
 ###Panel C, row 1
 
 For the total number of proteins
@@ -469,7 +468,7 @@ NPARC stat. model","TPP proc.
 SCAM stat. model","TPP proc.
 MSstatsTMT stat. model")
 Thermallate_spline_TPPprocesed<-Benchmarks_TPPproc_p
-saveRDS(Thermallate_spline_TPPprocesed,"Thermallate_spline_TPPprocesed.RDS")
+saveRDS(Dataset3alate_spline_TPPprocesed,"Thermallate_spline_TPPprocesed.RDS")
 ```
 ## Keep kinase interactors from each result
 
@@ -690,9 +689,9 @@ Benchmarks_external<-list("3a: TPPproc.
 MSstatsTMT stat. model"=Benchmarks_TPPproc_p$`MSstatsTMT stat. model`,
                           "Reference set"=na.omit(kinases),
                           "3a: MSstatsTMT proc. 
-MSstatsTMT stat. model"=Thermal_MSstatsTMTprocesed$`MSstatsTMT stat. model`)
+MSstatsTMT stat. model"=Dataset3a_MSstatsTMTprocesed$`MSstatsTMT stat. model`)
 
-png(filename = "Venn_thermal_MSstatsTMTstatmodel_processingdiff_kinases.png",
+png(filename = "Venn_Dataset3a_MSstatsTMTstatmodel_processingdiff_kinases.png",
     width =600, height = 600, units = "px", pointsize = 12,
     res = 130,type ="cairo")  
 

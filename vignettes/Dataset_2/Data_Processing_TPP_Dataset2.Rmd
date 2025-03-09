@@ -132,7 +132,7 @@ comparison<-make_contrast_matrix(df3,temps=c("53.8","57.1","60.4"))
 comparison
 ```
 
-#C. As in Figure 5, panel F to fit linear mixed models with groupComparisons from MSstatsTMT
+#C. As in Figure 5, panel F: fit linear mixed models with groupComparisons from MSstatsTMT
 ```{r}
 DIM<-MSstatsTMT::groupComparisonTMT(
   df3,

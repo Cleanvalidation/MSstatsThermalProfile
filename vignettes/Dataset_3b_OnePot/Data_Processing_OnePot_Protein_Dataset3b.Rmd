@@ -1,7 +1,6 @@
-oad
 
 ---
-title: "Data_Processing_MSstatsTMT"
+title: "Comparison Dataset 3b"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
@@ -38,9 +37,9 @@ theme_set(theme_bw())
 
 ```
 
-# Data Import
+#A. Data Import
 
-# Import option 1: Read Protein file from folder
+### Import option 1: Read Protein file from folder
 
 ```{r}
 CETSA_OnePot<-readxl::read_xlsx("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_Proteins.xlsx")
@@ -53,9 +52,9 @@ head(CETSA_OnePot)
 ```
 
 
-# Annotation File Generation
+#B. Annotation File import option
 
-## Read annotation file
+Read annotation file
 
 ```{r}
 CETSA_OnePot_annotation<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPP_annotation.csv")
@@ -63,7 +62,7 @@ CETSA_OnePot_annotation<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/O
 
 ```
 
-# Generate annotation columns
+### Or generate annotation columns
 
 ```{r}
 CETSA_OnePot$ProteinName<-CETSA_OnePot$Accession
@@ -80,7 +79,7 @@ head(CETSA_OnePot)
 ```
 
 
-# Format original PD protein data to MSstatsTMT
+#C. Format original PD protein data to MSstatsTMT
 
 ```{r}
 WD<-"~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/"
@@ -98,15 +97,8 @@ PD_df<-PD_df|>dplyr::mutate(Protein=as.character(Accession),
 MSstats_input<-list(ProteinLevelData=PD_df,FeatureLevelData=NA)                           
 ```
 
-# Normalization with TPP CCR requires more than one plex
 
-```{r}
-data(hdacCCR_smallExample)
-tppccrData <- tppccrImport(configTable=hdacCCR_config, data = hdacCCR_data)
-head(hdacCCR_data$Panobinostat_1)
-```
-
-# GroupComparisonTMT DMSO OnePot vs 25x
+#D. GroupComparisonTMT DMSO OnePot vs 25x
 
 ```{r}
 contrast.matrix<-matrix(ncol=5,nrow=1)
@@ -124,7 +116,7 @@ DIM_DMSOvs25x<-MSstatsTMT::groupComparisonTMT(MSstats_input,
                    append=FALSE)
 ```
 
-Determine overlaps between MSstatsTMT and OnePot
+#E. Read in protein data, human kinome and remove isoforms
 
 ```{r}
 #read in protein file
@@ -145,8 +137,29 @@ kinase_df<-kinases|>dplyr::inner_join(Proteins,relationship="many-to-many")|>dpl
 
 
 ```
+#F. Figure 4, panel A,  Read in TPP processed PD results with TPP statistical models to compare against OnePot
 
-NPARC
+```{r}
+
+#add benchmarks to original full curve designs
+Benchmarks_external<-append(list("3a: TPP proc. 
+TPP stat. mod."=TPPcurve_TPPprocesed$`TPP temp.`),list(
+  "Reference set"=na.omit(kinases$Accession),
+                         "3b: PD protein summary 
+  OnePotMSstatsTMT stat. mod."=MSstat_hits))
+
+grDevices::png(filename = "VennTPP_Fulltemp_vs_OnePot_TPP.png",
+    width =12, height = 6, units = "in", pointsize = 12,
+    res = 600,type ="cairo")  
+
+library(ggvenn)
+ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#D95F0E","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+dev.off() 
+
+```
+
+#F. Figure 4, panel B: Read in TPP processed PD results with NPARC statistical models to compare against OnePot
 
 ```{r}
 
@@ -174,29 +187,8 @@ dev.off()
 
 ```
 
-TPP
 
-```{r}
-
-#add benchmarks to original full curve designs
-Benchmarks_external<-append(list("3a: TPP proc. 
-TPP stat. mod."=TPPcurve_TPPprocesed$`TPP temp.`),list(
-  "Reference set"=na.omit(kinases$Accession),
-                         "3b: PD protein summary 
-  OnePotMSstatsTMT stat. mod."=MSstat_hits))
-
-grDevices::png(filename = "VennTPP_Fulltemp_vs_OnePot_TPP.png",
-    width =12, height = 6, units = "in", pointsize = 12,
-    res = 600,type ="cairo")  
-
-library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#D95F0E","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
-
-dev.off() 
-
-```
-
-SCAM
+#G. Figure 4 panel C, Read in TPP processed PD results with SCAM statistical models to compare against OnePot
 
 ```{r}
 Benchmarks_external<-append(list("3a: TPP proc.
@@ -214,7 +206,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#07fff8","#7b057b","#1d54
 dev.off() 
 ```
 
-MSstatsTMT
+#H. Figure 4, panel D: Read in TPP processed PD results with MSstatsTMT statistical models to compare against OnePot
 
 ```{r}
 Benchmarks_external<-append(list("3a: TPP proc. 
@@ -235,7 +227,7 @@ dev.off()
 saveRDS(MSstat_hits,"PD_Proteinproc_OnePot.RDS")
 ```
 
-# Profile plots
+#I. Figure 8, panel E: profile plots for MEK2
 
 ```{r}
 MEK2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P36507")|>dplyr::group_split(Condition)
@@ -251,7 +243,7 @@ ggplot(MEK2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_p
 
 ```
 
-box plots
+#J. Figure S-28, panel A: box plots for MEK2 
 
 ```{r}
 MEK2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P36507")|>dplyr::group_split(Condition)
@@ -268,7 +260,7 @@ saveRDS(MEK2_plotOnePot,"MEK2_allMethods_sig.RDS")
 MEK2_plotOnePot
 ```
 
-Boxplots for Syntaxin 2
+#K. Figure S-28, panel B: box plots for Syntaxin 2
 
 ```{r}
 STX2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P32856")|>dplyr::group_split(Condition)
@@ -285,10 +277,10 @@ STX2_plotOnePot<-ggplot(STX2_renamed,mapping=aes(x=Condition,y=Abundance,color=C
 saveRDS(STX2_plotOnePot,"STX2_MSstats_sigOnePot.RDS")
 STX2_plotOnePot
 ```
-
+#L. Figure S-28, panel C: box plots for CHEK1
 ```{r}
-CHK1<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="O14757")|>dplyr::group_split(Condition)
-CHK1_renamed<-lapply(CHK1,function(x) {
+CHEK1<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="O14757")|>dplyr::group_split(Condition)
+CHEK1_renamed<-lapply(CHEK1,function(x) {
   x$Condition<-as.character(x$Condition)
   x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
   x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
@@ -296,8 +288,8 @@ CHK1_renamed<-lapply(CHK1,function(x) {
   x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
   x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
                             return(x)})|>dplyr::bind_rows()
-CHK1_plotOnePot<-ggplot(CHK1_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_boxplot()+ylab(expression(log[2]~Abundance))+ggtitle("CHK1")
+CHEK1_plotOnePot<-ggplot(CHEK1_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_boxplot()+ylab(expression(log[2]~Abundance))+ggtitle("CHK1")
 
-saveRDS(CHK1_plotOnePot,"STX2_MSstats_sigOnePot.RDS")
-CHK1_plotOnePot
+saveRDS(CHEK1_plotOnePot,"CHK1_MSstats_sigOnePot.RDS")
+CHEK1_plotOnePot
 ```
