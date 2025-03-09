@@ -1,4 +1,4 @@
-plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_replicates=10){
+plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_replicates_per_plex=10){
   #QC plot of the simulation with 5 icc values
   #define an icc column based on the protein ID
   result$ICC<-stringr::str_extract(result$Protein,"icc_[:digit:].[[:digit:]]+")
@@ -13,7 +13,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
   }else{
     result$treatment<-result$Condition
   }
-  if(n_replicates==10){
+  if(n_replicates_per_plex==10){
     result<-result|>
       dplyr::group_by(Protein,Condition,temperature)|>
       dplyr::mutate(treatment=Condition)|>
@@ -22,7 +22,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
       dplyr::bind_rows()
   }
   if(design=="onePot"){
-    if(n_replicates==2|n_replicates==5){
+    if(n_replicates_per_plex==2|n_replicates_per_plex==5){
       result$Mixture<-"onePot"
       result$Run<-"onePot"
       result$Condition<-stringr::str_extract(result$Condition,"[[:lower:]]+")
@@ -40,7 +40,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
       x$Abundance<-2^(x$Abundance)
       x$Abundance<-mean(x$Abundance,na.rm=T)
       x$Abundance<-log2(x$Abundance)
-      if(design=="onePot"&n_replicates==2|n_replicates==5){
+      if(design=="onePot"&n_replicates_per_plex==2|n_replicates_per_plex==5){
        x$BioReplicate=x$BioReplicate[1]
        x$Subject=x$Subject[1]
        x$Channel=x$Channel[1]
@@ -49,11 +49,11 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",n_re
       return(x)
     })|>dplyr::bind_rows()
   }
-  if(n_replicates==5&design=="onePot"){
+  if(n_replicates_per_plex==5&design=="onePot"){
     annotation_file<-result|>dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
     annotation_file$Channel<-set_temps(10,temperatures=seq(1,10))$Channel
     result<-result|>dplyr::select(-Channel)|>dplyr::inner_join(annotation_file)
-  }else if(n_replicates==2&design=="onePot"){
+  }else if(n_replicates_per_plex==2&design=="onePot"){
     annotation_file<-result|>dplyr::select(Condition,Subject,temperature)|>dplyr::distinct()
     annotation_file$Channel<-set_temps(10,temperatures=seq(1,10))$Channel[1:4]
     result<-result|>dplyr::select(-Channel)|>dplyr::inner_join(annotation_file)

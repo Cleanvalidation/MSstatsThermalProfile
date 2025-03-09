@@ -1,5 +1,7 @@
 plot_benchmarks_MSstatsTMT<-function(result,design="TPP",shifter="Non"){
   #QC plot of the simulation with 5 icc values
+  #set temperature
+  temps<-as.numeric(unique(result$temperature))
   #define an icc column based on the protein ID
   result$ICC<-stringr::str_extract(result$Protein,"icc_[:digit:].[[:digit:]]+")
 
@@ -30,8 +32,9 @@ plot_benchmarks_MSstatsTMT<-function(result,design="TPP",shifter="Non"){
     ylab(expression(log[2]~Abundance))+
     geom_step(size=1.1)+
     ggtitle(paste0("Simulation template: ",shifter, " interaction"))+
-    scale_x_continuous("Temperature",breaks=as.numeric(unique(temps)), labels=as.numeric(unique(temps)))+
-    facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=15))+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="bottom")
+    scale_x_continuous("Temperature",labels=temps,breaks=temps)+
+    facet_wrap(~c(ICC),nrow=1)+theme(text=element_text(size=8))+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="bottom")
   Profile_plot
   dev.off()
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))

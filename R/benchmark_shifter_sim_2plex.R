@@ -1,7 +1,11 @@
 benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot",shifter="strong"){
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
-  all_proteins<-msstats_icc_output$df_with_variance#[!msstats_icc_output$df_with_variance$Condition=="Norm",]
+  if(any(names(msstats_icc_output)=="df_with_variance")){
+    all_proteins<-msstats_icc_output$df_with_variance
+  }else{
+    all_proteins<-dplyr::bind_rows(msstats_icc_output)
+  }
   all_proteins$Protein<-as.character(all_proteins$Protein)
   all_proteins$Condition<-as.character(all_proteins$Condition)
   template_MSstats<-list(ProteinLevelData=all_proteins|>
