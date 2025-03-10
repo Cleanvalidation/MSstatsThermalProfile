@@ -2,7 +2,7 @@ add_variation_shift_2plex<-function(template,icc,n_conditions,n_replicates,re_va
   n_temps<-length(t_range)
   #Define subjects per condition
   if(n_temps==1){
-    n_subjects<-10
+    n_subjects<-20
   }else if(n_temps==2){
     n_subjects<-10
   }else if(n_temps==5){
@@ -135,9 +135,9 @@ add_variation_shift_2plex<-function(template,icc,n_conditions,n_replicates,re_va
       dplyr::group_split()
     if(design=="OnePot"){
       YonePot_cr<-purrr::map2(result,seq(length(result)),function(x,y) {
-        X_obs_crt<-x|>dplyr::mutate(Abundance=2^Abundance)
-        XonePotcr<-X_obs_crt|>dplyr::mutate(Abundance=mean(Abundance,na.rm=T))
-        YonePot_cr<-XonePotcr|>dplyr::mutate(Abundance=log2(Abundance))
+        X_obs_crt<-x|>dplyr::mutate(Abundance=2^Abundance)#unlog
+        XonePotcr<-X_obs_crt|>dplyr::mutate(Abundance=mean(Abundance,na.rm=T))#average
+        YonePot_cr<-XonePotcr|>dplyr::mutate(Abundance=log2(Abundance))#log back
         #collapse temperature after pooling
         YonePot_cr<-YonePot_cr|>
           dplyr::select(-temperature)|>

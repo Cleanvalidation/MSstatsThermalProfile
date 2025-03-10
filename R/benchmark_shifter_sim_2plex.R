@@ -51,8 +51,8 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   template_simulation$Condition[is.na(template_simulation$Condition)]<-c("vehicle","treated")
   template_simulation$temperature[is.na(template_simulation$temperature)]<-rep(min(all_proteins$temperature,na.rm=T),2)
   png(filename = paste0("template_MsstatsTMTproc_",shifter,".png"),
-      width =600, height = 600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
+      width =12, height = 6, units = "in", pointsize = 12,
+      res = 600,type ="cairo")
   Template<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=Condition))+geom_point(size=2)+
     geom_step(linewidth=1)+
     scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
