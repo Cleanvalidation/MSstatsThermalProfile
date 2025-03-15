@@ -7,7 +7,7 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
     all_proteins<-dplyr::bind_rows(msstats_icc_output)
   }
   #subset range of temperatures for the design
-  all_proteins<-all_proteins[all_proteins$temperature %in% t_range]
+  all_proteins<-all_proteins[all_proteins$temperature %in% t_range,]
   all_proteins$Protein<-as.character(all_proteins$Protein)
   all_proteins$Condition<-as.character(all_proteins$Condition)
   template_MSstats<-list(ProteinLevelData=all_proteins|>
