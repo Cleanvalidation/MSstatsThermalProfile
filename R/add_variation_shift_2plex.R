@@ -38,7 +38,7 @@ add_variation_shift_2plex<-function(template,icc,n_conditions,n_replicates,re_va
   #n_replicates
 
   n_obs<-n_temps*n_conditions*n_replicates
-  stopifnot("number of observations must be 40 for the experimental design with 4 TMT-10plexes" = n_obs==40)
+  stopifnot("number of observations must be 20 for the experimental design with 2 TMT-10plexes" = n_obs==20)
 
   #modified_matrix[,3]<-seq(1:n_temps)
 
@@ -54,7 +54,7 @@ add_variation_shift_2plex<-function(template,icc,n_conditions,n_replicates,re_va
 
 
     # create an empty matrix to store modified responses
-    modified_matrix <- matrix(nrow = 1, ncol = 40)
+    modified_matrix <- matrix(nrow = 1, ncol = 20)
 
     for ( i in 1:n_conditions){
       #iterate over the number of subjects defined as an input and generate biological variation per subject

@@ -41,8 +41,8 @@ benchmark_nonshifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_si
     dplyr::inner_join(temps)|>dplyr::group_by(temperature)|>
     dplyr::mutate(Abundance=mean(Abundance,na.rm=T))
   png(filename = "template_MsstatsTMTproc_nonshifter.png",
-      width =600, height = 600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
+      width =12, height = 6, units = "in", pointsize = 12,
+      res = 600,type ="cairo")
   Template<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point(size=2)+
     geom_step(linewidth=1)+
     scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
@@ -55,7 +55,7 @@ benchmark_nonshifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_si
 
   # dplyr::group_split()|>
   # dplyr::first()
-  icc_range<-c(0.05,0.2,0.4,0.6,0.8)#from the histogram data, select a range of icc values (0-0.8)
+  icc<-c(0.05,0.2,0.4,0.6,0.8)#from the histogram data, select a range of icc values (0-0.8)
 
   re_var<-median(all_proteins$sigma_re^2)
   #define output

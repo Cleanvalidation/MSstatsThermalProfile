@@ -27,8 +27,31 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
       lapply(function(x)x|>dplyr::mutate(replicate=seq(1,10)))|>
       dplyr::bind_rows()
   }
+  temps<-unique(result$temperature)
   if(design=="OnePot"){
-    if(n_replicates_per_plex==2|n_replicates_per_plex==5){
+    if(n_replicates_per_plex==5){
+      annotation_file<-result|>
+        dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,temperature, treatment, Channel)|>
+        dplyr::distinct()|>
+        dplyr::group_by(Condition)|>
+        dplyr::mutate(Replicate=seq(1,10),
+                      Subject=paste0(ifelse(Condition=="vehicle",1,2),"_",Replicate),
+                      BioReplicate=Subject,
+                      Condition=treatment,
+                      Run = paste0("OnePot",sample(1:2,10,replace=TRUE)),
+                      Mixture = Run)|>
+        dplyr::ungroup()|>
+        dplyr::select(-Replicate)
+
+      result<-result|>
+        dplyr::select(-Subject,-BioReplicate,-Mixture,-Run)|>
+        dplyr::inner_join(annotation_file)
+    }else if(!n_replicates_per_plex==1){
+      annotation_file<-result|>
+        dplyr::select(Run, temperature, TechRepMixture, Mixture, BioReplicate, Condition,Subject)|>
+        dplyr::distinct()|>
+        dplyr::group_by(Condition)|>
+        dplyr::group_split()
       result$Mixture<-"OnePot"
       result$Run<-"OnePot"
       result$Condition<-stringr::str_extract(result$Condition,"[[:lower:]]+")
@@ -40,26 +63,23 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
       result<-result|>dplyr::group_by(Protein,treatment,replicate)|>dplyr::group_split()
 
     }
-
-    #unlog average and log back
-    result<-lapply(result,function(x) {
-      x$Abundance<-2^(x$Abundance)
-      x$Abundance<-mean(x$Abundance,na.rm=T)
-      x$Abundance<-log2(x$Abundance)
-      if(design=="onePot"&n_replicates_per_plex==2|n_replicates_per_plex==5){
-       x$BioReplicate=x$BioReplicate[1]
-       x$Subject=x$Subject[1]
-       x$Channel=x$Channel[1]
-       x<-x|>dplyr::distinct()
-      }
-      return(x)
-    })|>dplyr::bind_rows()
+  # if(n_replicates_per_plex==1){
+  #   #unlog average and log back
+  #   result<-lapply(result,function(x) {
+  #     x$Abundance<-2^(x$Abundance)
+  #     x$Abundance<-mean(x$Abundance,na.rm=T)
+  #     x$Abundance<-log2(x$Abundance)
+  #     if(design=="onePot"&n_replicates_per_plex==2){
+  #      x$BioReplicate=x$BioReplicate[1]
+  #      x$Subject=x$Subject[1]
+  #      x$Channel=x$Channel[1]
+  #      x<-x|>dplyr::distinct()
+  #     }
+  #     return(x)
+  #   })|>dplyr::bind_rows()
+  # }
   }
-  if(n_replicates_per_plex==5&design=="onePot"){
-    annotation_file<-result|>dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
-    annotation_file$Channel<-set_temps(10,temperatures=seq(1,10))$Channel
-    result<-result|>dplyr::select(-Channel)|>dplyr::inner_join(annotation_file)
-  }else if(n_replicates_per_plex==2&design=="onePot"){
+  if(n_replicates_per_plex==2&design=="OnePot"){
     annotation_file<-result|>dplyr::select(Condition,Subject,temperature)|>dplyr::distinct()
     annotation_file$Channel<-set_temps(10,temperatures=seq(1,10))$Channel[1:4]
     result<-result|>dplyr::select(-Channel)|>dplyr::inner_join(annotation_file)
@@ -114,25 +134,25 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
     MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
       geom_histogram(fill="#030366",color="black",bins=1,binwidth = 0.025)+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
       coord_cartesian(xlim = c(0, 1))+ylim(0,1000)+xlab("pvalue")+
-      theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+      theme(text=element_text(size=12),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
       coord_cartesian(xlim = c(0, 1))+
       scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
       geom_text(mapping=aes(x=0.5,y=800),
-                label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")
+                label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=8)+ylab("protein count")
     }else{
       MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
         geom_histogram(fill="#030366",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
         scale_x_continuous(n.breaks=8)+ylim(0,1000)+xlab("pvalue")+
-        theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
+        theme(text=element_text(size=12),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
         scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
         geom_text(mapping=aes(x=0.5,y=800),
-                  label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")
+                  label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=8)+ylab("protein count")
     }
   }else{#if this is a TPP design
   MSstat_hist<-ggplot2::ggplot(ATE_MSstats$ComparisonResult,mapping=aes(x=pvalue))+
     geom_histogram(fill="#2C7FB8",color="black")+facet_wrap(~factor(ICC,levels=c("% of bio var = 5","% of bio var = 40")),nrow=1)+
     ylim(0,1000)+xlab("pvalue")+ scale_x_continuous(n.breaks=8)+
-    theme(text=element_text(size=8),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
+    theme(text=element_text(size=12),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+coord_cartesian(xlim = c(0, 1))+
     scale_x_continuous(breaks=c(0,0.2,0.4,0.6,0.8,1.0))+
     geom_text(mapping=aes(x=0.5,y=800),
               label=paste0(ATE_MSstats$ComparisonResult$Sens," %"),size=6)+ylab("protein count")
