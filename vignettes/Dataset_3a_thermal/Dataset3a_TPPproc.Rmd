@@ -495,7 +495,7 @@ fitted_MSstat<-purrr::map2(Stat_mod,DIM_targets,function(x,y)x|>dplyr::mutate(mo
 ```
 
 
-# Plot the curves For Figures S-17 S-19 S-21 and save the data
+# Plot the curves For Figures 3, S-17 S-19 S-21 and save the data
 
 ```{r}
 #identify significant kinases per method
@@ -522,7 +522,7 @@ target_curves$O14757
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_Spline_O14757.tiff")
 ```
 
-## K. Figure S-24 Panel A bar charts
+## K. Figure 3 Panel A bar charts
 
 ```{r}
 bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)

@@ -538,7 +538,7 @@ target_curves$O14757
 ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_Spline_O14757.tiff")
 ```
 
-#K. Figure S-24, panel C bar charts
+#K. Figure 3, panel C bar charts
 
 ```{r}
 bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_MSstatsTMTproc_n,Benchmarks_MSstatsTMTproc_filt_n,Benchmarks_MSstatsTMTproc_p_n)
