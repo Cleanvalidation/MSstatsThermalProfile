@@ -1,4 +1,4 @@
-benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="hybrid",shifter="strong"){
+benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot",shifter="strong"){
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   all_proteins<-msstats_icc_output$df_with_variance
@@ -65,8 +65,8 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   #define the number of replicates per condition based on the number of temperatures provided
   template_simulation
   #number of replicates per condition = 5 because it is 1-plex
-
   n_replicates<-5
+
   template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
 
   df<-template_simulation|>

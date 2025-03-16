@@ -49,11 +49,8 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
 
     }
   }
-  if(n_replicates_per_plex==2&design=="OnePot"){
-    annotation_file<-result|>dplyr::select(Condition,Subject,temperature)|>dplyr::distinct()
-    annotation_file$Channel<-set_temps(10,temperatures=seq(1,10))$Channel[1:4]
-    result<-result|>dplyr::select(-Channel)|>dplyr::inner_join(annotation_file)
-  }
+
+
   annotation_file<-result|>dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
   write.csv(annotation_file,paste0("annotation_file",shifter,"_",design,".csv"))
   #Define a data frame with one protein sim per ICC value
