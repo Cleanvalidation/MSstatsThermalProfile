@@ -49,10 +49,19 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
 
     }
   }
-
+ # Keep 2 replicates per protein at random
+ if(n_replicates_per_plex==2|n_replicates_per_plex==5){
+   result<-result|>
+     dplyr::group_by(Protein,Condition)|>
+     dplyr::group_split()|>
+     lapply(function(x) x[sample(1:nrow(x),size=n_replicates_per_plex),])|>
+     dplyr::bind_rows()|>
+     dplyr::ungroup()
+ }else{
 
   annotation_file<-result|>dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
   write.csv(annotation_file,paste0("annotation_file",shifter,"_",design,".csv"))
+ }
   #Define a data frame with one protein sim per ICC value
   One_prot_ICC<-result|>
     dplyr::group_by(ICC)|>
