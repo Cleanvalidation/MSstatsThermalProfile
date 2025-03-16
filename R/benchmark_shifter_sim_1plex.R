@@ -1,10 +1,15 @@
-benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="hybrid"){
+benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="hybrid",shifter="strong"){
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   all_proteins<-msstats_icc_output$df_with_variance
-
+  #get temperatures
+  temps<-unique(msstats_icc_output$df_with_variance$temperature)[t_range]
+  #filter by template protein
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein))
+                           dplyr::filter(Protein %in% templateProtein,
+                                         temperature %in% temps))
+
+
 
   #get predicted values per condition
 
@@ -60,19 +65,11 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   n_temps<-length(t_range)
   #define the number of replicates per condition based on the number of temperatures provided
   template_simulation
-  #number of replicates per condition
-  if(n_temps==1){
-    n_replicates<-20
-    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
-  }else if(n_temps==2){
-    n_replicates<-10
-    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
-  }else if(n_temps==5){
-    n_replicates<-4
-    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
-  }else if(n_temps==10){
-    n_replicates<-2
-  }
+  #number of replicates per condition = 5 because it is 1-plex
+
+  n_replicates<-5
+  template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
+
   df<-template_simulation|>
     dplyr::select(Abundance,temperature,treatment,Channel)
   result<-list()
@@ -83,7 +80,7 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
     for(j in icc_range){#for each protein, one intra-class correlation is used to generate a profile
 
       #Simulate profiles with variation components
-      Sims<- add_variation_shift(df,j,n_conditions,n_replicates,re_var,t_range,design=design)
+      Sims<- add_variation_shift_1plex(df,j,n_conditions,n_replicates,re_var,t_range,design=design)
 
       #Revert the list back to a data frame
       Sims<-dplyr::bind_rows(Sims)

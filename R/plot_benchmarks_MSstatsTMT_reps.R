@@ -13,7 +13,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
   }else{
     result$treatment<-result$Condition
   }
-  if(n_replicates_per_plex==1&length(t_range)==2){
+  if(n_replicates_per_plex==4&length(t_range)==2){
     temps<-unique(result$temperature)[t_range] #the temperatures for the contrast
     #only keep the temperatures for the contrast
     result<-result|>
