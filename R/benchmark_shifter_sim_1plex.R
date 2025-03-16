@@ -2,12 +2,11 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   all_proteins<-msstats_icc_output$df_with_variance
-  #get temperatures
-  temps<-unique(msstats_icc_output$df_with_variance$temperature)[t_range]
+  # #get temperatures
+  # temps<-unique(msstats_icc_output$df_with_variance$temperature)[t_range]
   #filter by template protein
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein,
-                                         temperature %in% temps))
+                           dplyr::filter(Protein %in% templateProtein))
 
 
 
@@ -32,7 +31,7 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
 
 
 
-  #set th template for hte simulation
+  #set the template for simulation
   template_simulation<-template_MSstats
   #define mapping between temperatures and TMT channels
   temps<-all_proteins|>dplyr::mutate(Protein %in% templateProtein)|>dplyr::select(Channel,temperature)|>dplyr::distinct()
