@@ -73,7 +73,7 @@ Histograms_2temp_weak_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2ple
 ###Simulate a non interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_5repsnon<-benchmark_shifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
+OnePot_1plex_5repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
 Histograms_2temp_non_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_5repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5)
 ```
 #D. Figure 6, panel F: for a design with 1 TMT 10-plex, 2 biological replicates per mixture and 2 temperatures 
@@ -81,18 +81,18 @@ Histograms_2temp_non_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex
 ###Simulate a strong interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 ```{r}
 OnePot_1plex_2repsstrong<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_strong_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =2)
+Histograms_2temp_strong_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=2)
 ```
 ###Simulate a weak interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 
 ```{r}
 OnePot_1plex_2repsweak<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_weak_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsweak,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =2)
+Histograms_2temp_weak_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsweak,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=2)
 ```
 
 ###Simulate a non interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_2repsnon<-benchmark_shifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_non_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =2)
+OnePot_1plex_2repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
+Histograms_2temp_non_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex=2)
 ```
