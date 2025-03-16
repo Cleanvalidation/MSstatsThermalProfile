@@ -46,38 +46,8 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
       result<-result|>
         dplyr::select(-Subject,-BioReplicate,-Mixture,-Run)|>
         dplyr::inner_join(annotation_file)
-    }else if(!n_replicates_per_plex==1){
-      annotation_file<-result|>
-        dplyr::select(Run, temperature, TechRepMixture, Mixture, BioReplicate, Condition,Subject)|>
-        dplyr::distinct()|>
-        dplyr::group_by(Condition)|>
-        dplyr::group_split()
-      result$Mixture<-"OnePot"
-      result$Run<-"OnePot"
-      result$Condition<-stringr::str_extract(result$Condition,"[[:lower:]]+")
-
-      result<-result|>dplyr::group_by(Protein,Condition,replicate)|>dplyr::group_split()
-    }else{
-      result$Mixture<-stringr::str_extract(result$Condition,"[[:lower:]]+")
-      result$Run<-result$Mixture
-      result<-result|>dplyr::group_by(Protein,treatment,replicate)|>dplyr::group_split()
 
     }
-  # if(n_replicates_per_plex==1){
-  #   #unlog average and log back
-  #   result<-lapply(result,function(x) {
-  #     x$Abundance<-2^(x$Abundance)
-  #     x$Abundance<-mean(x$Abundance,na.rm=T)
-  #     x$Abundance<-log2(x$Abundance)
-  #     if(design=="onePot"&n_replicates_per_plex==2){
-  #      x$BioReplicate=x$BioReplicate[1]
-  #      x$Subject=x$Subject[1]
-  #      x$Channel=x$Channel[1]
-  #      x<-x|>dplyr::distinct()
-  #     }
-  #     return(x)
-  #   })|>dplyr::bind_rows()
-  # }
   }
   if(n_replicates_per_plex==2&design=="OnePot"){
     annotation_file<-result|>dplyr::select(Condition,Subject,temperature)|>dplyr::distinct()
