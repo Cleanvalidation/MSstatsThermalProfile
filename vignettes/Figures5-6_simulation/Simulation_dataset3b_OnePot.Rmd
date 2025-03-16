@@ -77,6 +77,7 @@ OnePot_1plex_5repsnon<-benchmark_shifter_sim_1plex(Dataset_2_ICC,templateProtein
 Histograms_2temp_non_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_5repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5)
 ```
 #D. Figure 6, panel F: for a design with 1 TMT 10-plex, 2 biological replicates per mixture and 2 temperatures 
+###Print out ICC distributions and simulate a strong shifter
 
 ###Simulate a strong interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 ```{r}
