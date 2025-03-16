@@ -1,0 +1,169 @@
+---
+title: "Figure4_simulation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculate_PPV_Sim}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+devtools::load_all(".")
+```
+
+```{r setup}
+library(MSstatsThermalProfiler)
+library(scam)
+library(mgcv)
+library(marginaleffects)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(furrr)
+library(future)
+library(ggplot2)
+library(forcats)
+library(cowplot)
+
+plan(multicore,workers=future::availableCores()-2)
+options(future.globals.maxSize = 8000 * 1024^2)
+```
+
+#A.  We begin by simulating true negative values. This simulation contains four replicates, two per condition (e.g. vehicle or treated) and relies on 10 TMT channels where each channel corresponds to one temperature. 
+
+```{r}
+data(truenegatives)
+truenegatives<-truenegatives$ProteinLevelData|>dplyr::mutate(Accession=Protein,
+                                            treatment=Condition,
+                                            Mixture=Subject)
+```
+#B. TPP splines statistical model
+```{r}
+start=proc.time()
+TPP_F_trueneg_results = TPP_NPARC_calc(Sims_TN,method="NPARC",DF=5,temps=set_temps(10,unique(Sims_TN$temperature)),
+                                        CARRIER=TRUE,returnModels=TRUE,filters=FALSE,NORM = FALSE)
+end=proc.time()
+print(end-start)
+```
+
+###the null distribution of p-values for TPP splines for 5% biological variance
+
+```{r}
+TPP5<-hist(TPP_F_trueneg_results$pNPARC[stringr::str_detect(TPP_F_trueneg_results$Protein,"_0.05")],breaks=20,xlab = "p-values",col="#D95F0E",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 5")
+```
+###the null distribution of p-values for TPP splines for 40% biological variance
+
+```{r}
+TPP40<-hist(TPP_F_trueneg_results$pNPARC[stringr::str_detect(TPP_F_trueneg_results$Protein,".4")],breaks=20,xlab = "p-values",col="#D95F0E",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 40")
+```
+#C. NPARC statistical model
+
+Implement a sigmoidal function for true negatives
+
+```{r}
+NPARC_fits_TN <-NPARC::NPARCfit(x = Sims_TN$temperature,
+                 y =Sims_TN$Abundance,
+                 id =Sims_TN$Protein,
+                 groupsNull = NULL,
+                 groupsAlt = as.character(Sims_TN$Condition),
+                 BPPARAM=BPPARAM,
+                 returnModels = TRUE)
+```
+
+###NPARC theoretical F-test for 5% biological variance
+
+```{r}
+NPARC_test_theo_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="theoretical")
+
+NPARC<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,"0.05")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="% of biovar = 5")
+```
+###NPARC theoretical F-test for 40% biological variance
+
+```{r}
+NPARC_test_theo_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="theoretical")
+
+NPARC<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,".4")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="% of biovar = 40")
+```
+
+### NPARC empirical F-test for 5% biological variance
+
+```{r}
+
+NPARC_test_emp_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="empirical")
+
+hist(NPARC_test_emp_TN$pVal[stringr::str_detect(NPARC_test_emp_TN$id,"0.05")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 1.5,cex.axis=1.5,main="% of bio var = 5")
+```
+
+
+### NPARC empirical F-test for 40% biological variance
+
+```{r}
+
+NPARC_test_emp_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="empirical")
+
+hist(NPARC_test_emp_TN$pVal[stringr::str_detect(NPARC_test_emp_TN$id,".4")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 40")
+```
+
+
+#D. SCAM statistical modeling
+
+```{r}
+start=proc.time()
+SCAM_pvals_TN = compute_pvalues_ATE_RE_F(truenegatives)
+end=proc.time()
+print(end-start)
+```
+
+Then look at the null distribution of p-values
+
+```{r}
+SCAM5<-hist(SCAM_pvals_TN$p.value[stringr::str_detect(SCAM_pvals_TN$Accession,"0.05")],20,col="#00FFFF",xlab="p-values",cex.lab = 2,cex.axis=2,main="% of biovar = 5")
+```
+
+#Then look at the null distribution of p-values
+
+```{r}
+SCAM40<-hist(SCAM_pvals_TN$p.value[stringr::str_detect(SCAM_pvals_TN$Accession,"0.4")],20,col="#00FFFF",xlab="p-values",cex.lab = 2,cex.axis=2,main="% of biovar = 40")
+```
+#E. MSstatsTMT processing
+```{r} 
+MSstat_TNdata<-list(ProteinLevelData=Sim2MSstatsTMT(truenegatives,half_temp_grid = FALSE))
+
+names(MSstat_TNdata$ProteinLevelData)
+```
+
+###Create a contrast matrix for the data
+
+```{r}
+MSstat_TNdata$ProteinLevelData<-MSstat_TNdata$ProteinLevelData[!MSstat_TNdata$ProteinLevelData$Channel=="126",]
+
+TN_compmat<-make_contrast_matrix(MSstat_TNdata,temps=unique(MSstat_TNdata$ProteinLevelData$temperature))
+
+TN_compmat
+```
+
+#F. MSstatsTMT statistical model
+
+```{r}
+start=proc.time()
+MSstat_TNresult = MSstatsTMT::groupComparisonTMT(data=MSstat_TNdata,contrast.matrix=TN_compmat,remove_norm_channel = TRUE,
+                                     moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)$ComparisonResult
+end=proc.time()
+print(end-start)
+
+```
+
+#G. For the true negatives from MSstatsTMT, we can calculate the null distribution
+### 5% biological variance
+
+```{r}
+MSstat_5pctvar<-hist(MSstat_TNresult$pvalue[stringr::str_detect(MSstat_TNresult$Protein,"0.05")],18,col="#2C7FB8",xlab="p-values",cex.lab=1.5,cex.axis=2,main="% of biovar = 5")
+```
+### 40% biological variance
+```{r}
+MSstat_40pctvar<-hist(MSstat_TNresult$pvalue[stringr::str_detect(MSstat_TNresult$Protein,"0.4")],18,col="#2C7FB8",xlab="p-values",cex.lab=1.5,cex.axis=2,main="% of biovar = 40")
+```

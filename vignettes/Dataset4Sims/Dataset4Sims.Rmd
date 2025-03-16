@@ -1,0 +1,134 @@
+---
+title: "Dataset4Sims"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dataset4Sims}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MSstatsThermalProfiler)
+```
+# Temporal Simulations
+
+## Generate simulations
+
+```{r}
+
+Dataset_3_ICC<-msstats_icc(summarised.proteins,temps=c("47.2","50.5"))
+```
+
+## Traditional temporal design simulations
+
+```{r}
+
+TPP_sims_4plex_TN<-benchmark_nonshifter_sim(Dataset_3_ICC,templateProtein="Q6NV46",n_sims=1000,t_range = seq(1,10),design="TPP")
+```
+
+## Unlog and scale abundances for benchmarking statistical models
+
+```{r}
+#Add ICC value percentages
+
+TPP_sims_4plex_TN$ICC<-stringr::str_extract(TPP_sims_4plex_TN$Protein,"icc_[:digit:].[[:digit:]]+")
+  TPP_sims_4plex_TN$ICC<-paste0("% of bio var = ",100*as.numeric(stringr::str_extract(TPP_sims_4plex_TN$ICC,"[:digit:].[[:digit:]]+")))
+ 
+TN_proteins<-TPP_sims_4plex_TN|>
+  dplyr::mutate(Channel=as.character(Channel),Mixture=as.character(Mixture))|>
+  as.data.frame()
+
+TN_proteins1<-TN_proteins|>dplyr::mutate(Condition=stringr::str_extract(Condition,"[[:lower:]]+"),
+shape=ifelse(temperature==min(temperature,na.rm=TRUE),"reference","included"))|>dplyr::distinct()
+#Since MSstats outputs are log2 transformed, NPARC runs faster by ratioing the data from all temperatures over the baseline temperature
+reps<-pd_annotation|>dplyr::select(Mixture,Subject)|>dplyr::distinct()
+
+TN_proteins<-TN_proteins|>
+  as.data.frame()|>
+  dplyr::inner_join(reps)
+if(length(unique(TN_proteins1$Condition))>2|length(unique(TN_proteins1$Condition)==1)){
+  
+  TN_proteins1$Condition<-ifelse(stringr::str_detect(stringr::str_extract(stringr::str_remove_all(stringr::str_to_lower(TN_proteins1$Run),"[[:digit:]]+&[[:punct:]]+"),"[[:lower:]]+"),"dmso|control"),"vehicle","treated")
+}
+
+TN_proteins1<-TN_proteins1|>
+  as.data.frame()|>
+  dplyr::group_by(Protein,Run,Mixture)|>
+  dplyr::group_split()|>
+  lapply(function(x) x|>
+  dplyr::mutate(Abundance=2^Abundance))
+
+TN_proteins1<-lapply(TN_proteins1,function(y) y|>as.data.frame()|>dplyr::mutate(Abundance=                                                      Abundance/Abundance[10]))|>dplyr::bind_rows()
+
+TN_proteins1$BioReplicate<-paste0(TN_proteins1$treatment,"_",TN_proteins1$TechRepMixture)
+
+TN_proteins1$Subject<-paste0(TN_proteins1$treatment,"_",TN_proteins1$TechRepMixture)
+```
+
+## Benchmark temporal designs
+
+```{r}
+#Run TPP spline and implement the NPARC F-test with 5 DF
+start=proc.time()
+TPP_temporal_results_TN = TPP_NPARC_calc(TN_proteins1,method="NPARC",DF=5,CARRIER=FALSE,NORM=FALSE,filters=TRUE,temps=set_temps(10,c(64.0,60.4,57.1,53.8,50.5,47.2,43.9,40.6,37.3,34.0)))
+end=proc.time()
+print(end-start)
+```
+
+# Theoretical 1-plex design with OnePot
+
+```{r}
+
+
+OnePot_sims_2plex_TN<-benchmark_nonshifter_sim_2plex(Dataset_3_ICC,templateProtein="Q6NV46",n_sims=1000,t_range = seq(5,6),design="onePot")
+
+OnePot_sims_2plex_TN_hist<-plot_benchmarks_MSstatsTMT(OnePot_sims_2plex_TN,design="onePot",shifter="Non")
+```
+
+## Proposed 2-temperature design using 2-plex 5 replicates
+
+```{r}
+TPP_sims_2plex_TN<-benchmark_nonshifter_sim_2plex(Dataset_3_ICC,templateProtein="Q6NV46",n_sims=1000,t_range = seq(5,6),design="TPP")
+
+TPP_sims_2plex_TN_hist<-plot_benchmarks_MSstatsTMT(TPP_sims_2plex_TN,design="TPP",shifter="Non")
+```
+
+
+##Traditional 4plex designs
+
+```{r}
+TPP_sims_4plex_TN<-benchmark_nonshifter_sim(Dataset_3_ICC,templateProtein="Q6NV46",n_sims=1000,t_range = seq(5,6),design="TPP")
+
+TPP_sims_4plex_TN_hist<-plot_benchmarks(TPP_sims_4plex_TN,temps=unique(TPP_sims_4plex_TN$temperature),design="TPP",shifter="Non")
+
+```
+
+##Traditional 4plex designs onePot
+
+```{r}
+
+TPP_sims_4plex_TN<-benchmark_nonshifter_sim(Dataset_3_ICC,templateProtein="Q6NV46",n_sims=1000,t_range = seq(1,10),design="TPP")
+
+TPP_sims_4plex_TN_hist_OP<-plot_benchmarks(TPP_sims_4plex_TN_OP,temps=unique(TPP_sims_4plex_TN_OP$temperature),design="onePot",shifter="Non")
+```
+##Profile plots
+```{r}
+
+MEK2_renamed<-lapply(summarised.proteins,function(x) {
+  x$Condition<-as.character(x$Condition)
+  x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
+  x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
+  x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
+                            return(x)})
+
+MSstatsTMT::dataProcessPlotsTMT(data=MEK2_renamed,type="PROFILEPLOT",which.Protein="P36507")
+```
