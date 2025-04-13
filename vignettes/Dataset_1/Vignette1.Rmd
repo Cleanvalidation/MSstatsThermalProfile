@@ -1,12 +1,12 @@
 ---
-title: "Data_Processing_MSstatsTMT"
+title: "Vignette 1"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
+#With dataset 1, this vignette will outline TPP processed datasets at the protein level and evaluate TPP spline, NPARC sigmoid, SCAM splines and MSstatsTMT statistical modeling.
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -42,7 +42,7 @@ theme_set(theme_bw())
 data("uniqueAccessions")
 ```
 
-s#A.  Table 1, step 1 Data Import
+#A.  Table 1, step 1 Data Import
 
 ### Import option 1: Read in your own file
 
