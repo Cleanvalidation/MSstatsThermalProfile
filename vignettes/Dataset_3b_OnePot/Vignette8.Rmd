@@ -1,13 +1,14 @@
 ------------------------------------------------------------------------
 
 ---
-title: "Comparison OnePot MSstatsTMT"
+title: "Vignette8"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+#With dataset 3b, this vignette will outline OnePot processed datasets at the peptide and evaluate MSstatsTMT statistical modeling.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(

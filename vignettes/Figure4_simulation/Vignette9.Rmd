@@ -1,12 +1,12 @@
 ---
-title: "Figure4_simulation"
+title: "Vignette9"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Calculate_PPV_Sim}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
+#Figure 4 simulation data is outlined for a template protein in dataset 2 which represents a true negative protein interactor.
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
