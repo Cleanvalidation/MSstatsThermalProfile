@@ -1,11 +1,12 @@
 ---
-title: "Data_Processing_MSstatsTMT"
+title: "Vignette4"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data_Processing_MSstatsTMT}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+#With dataset 2, this vignette will outline MSstatsTMT processed datasets at the protein level and evaluate TPP spline, NPARC sigmoid, SCAM splines and MSstatsTMT statistical modeling.
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
