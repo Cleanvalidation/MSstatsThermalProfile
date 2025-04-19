@@ -1,0 +1,175 @@
+---
+title: "Vignette13"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette13}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MSstatsThermalProfiler)
+library(MSstats)
+library(MSstatsConvert)
+library(MSstatsTMT)
+library(tidyr)
+library(stringr)
+library(TPP)
+library(NPARC)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+theme_set(theme_bw())
+```
+##With dataset 3b, this vignette will outline TPP processed datasets at the PSM level.  While the thermal profiling experiment only considered two conditions, the DMSO control and 25x (20μM) Staurosporine, OnePot included additional Staurosporine concentrations (1x, 5x, 10x and 25x Staurosporine, i.e. 5 conditions total), and the number of biological replicates was increased to 3 per condition. Unlike with the conventional thermal profiling, samples from the same biological replicate treated with a total of 10 temperatures within the range of 45-58°C were pooled into one mixture prior to TMT labeling, and allocated to a single TMTpro 16-plex.   This single-plex study did not require a reference channel, and the 16th channel was left empty and discarded from further analyses.
+
+#A. Data Import
+
+### Import option 1: Read in your own file
+
+**Use getwd(your_working_directory) to get a folder where your PSM data is stored**
+
+```{r}
+WD<-"D:/"
+h<-list.files(WD,pattern="PSMs.txt")|>as.list()
+setwd(WD)
+df<-purrr::map(h,function(x) read.delim(x)) |> dplyr::bind_rows()
+
+PSMs<-df
+df<-as.data.frame(df)
+#Filter out channel 131C
+df<-df[,!stringr::str_detect(names(df),"Abundance.131C")]
+#rename 131C to 131
+names(df)<-stringr::str_replace(names(df),"131N","131")
+```
+
+Annotation File Generation
+
+### Option 1: Generate annotation file
+
+```{r}
+ 
+PD_df<-df|>dplyr::select(Spectrum.File,File.ID,dplyr::starts_with("Abundance"))|>dplyr::mutate(Fraction=stringr::str_remove(File.ID,"F[:digit:]."))|>dplyr::mutate(treatment=ifelse(stringr::str_detect(Spectrum.File,"V|DMSO"),"vehicle","treated"))
+
+
+PD_df<-PD_df|>tidyr::pivot_longer(cols=colnames(PD_df)[stringr::str_detect(colnames(PD_df),"Abundance")],names_to="Channel",values_to="Abundance")|>dplyr::select(-Abundance)|>dplyr::distinct()|>dplyr::mutate(Channel=stringr::str_extract(Channel,"[[:digit:]]+[N|C]|[:digit:][:digit:][:digit:]"),File.ID=stringr::str_extract(File.ID,"F[:digit:]"),Condition=paste0(Channel,"_",treatment))
+
+Mapping<-PD_df|>dplyr::select(treatment,File.ID)|>dplyr::distinct()|>dplyr::group_by(treatment)|>dplyr::mutate(TechRepMixture=seq(1:dplyr::n()))|>dplyr::ungroup()
+# #set mapping between temperatures and channels
+temps<-set_temps(10,c("37.3","40.2","44.9","47.6","51","54","57","61.8","64.1","67"))
+#TMT11 was used but the 75C temperature was filtered out
+
+#add temperatures
+df_annotation<-PD_df|>dplyr::select(Spectrum.File,Channel,File.ID,Fraction,Condition)|>dplyr::distinct()|>dplyr::inner_join(temps,by="Channel")|>dplyr::inner_join(Mapping)
+
+#Add bioreplicate, mixture and run
+df_annotation$BioReplicate<-ifelse(df_annotation$temperature==min(df_annotation$temperature),"Norm",paste0(df_annotation$Channel,"_",df_annotation$treatment))
+
+df_annotation$Mixture<-paste0(df_annotation$treatment,"_",
+                                           df_annotation$TechRepMixture)
+df_annotation$Run<-df_annotation$Spectrum.File
+
+```
+
+
+
+#B. Table 1, steps 1 and 2 
+Import the data into MSStatsTMT
+
+```{r}
+
+processed.features <- MSstatsTMT::PDtoMSstatsTMTFormat(df,
+                                                    df_annotation,
+                                                    which.proteinid = "Master.Protein.Accessions",
+                                                    useNumProteinsColumn = FALSE,
+                                                    useUniquePeptide = TRUE,
+                                                    rmPSM_withfewMea_withinRun = TRUE,
+                                                    rmProtein_with1Feature = TRUE,
+                                                    summaryforMultipleRows = max,
+                                                    use_log_file = FALSE,
+                                                    append=FALSE,
+                                                    verbose=TRUE)
+```
+### Table 1 steps 4-6
+Summarize the peptide data into proteins
+
+```{r}
+processed.features$Condition<-as.character(processed.features$Condition)
+processed.features$Condition[stringr::str_detect(processed.features$Condition,"126")]<-"Norm"
+
+summarised.proteins <- MSstatsTMT::proteinSummarization(
+  data = processed.features,
+  method = "msstats",
+  global_norm = FALSE,
+  reference_norm = TRUE,
+  MBimpute=TRUE,
+  use_log_file=FALSE,
+  append=FALSE,
+  remove_norm_channel=TRUE,
+  remove_empty_channel=TRUE)
+
+summarised.proteins$ProteinLevelData<-summarised.proteins$ProteinLevelData|>dplyr::inner_join(temps,by="Channel")
+summarised.proteins$FeatureLevelData<-summarised.proteins$FeatureLevelData|>dplyr::inner_join(temps,by="Channel")
+summarised.proteins$ProteinLevelData$treatment<-summarised.proteins$ProteinLevelData$Run
+summarised.proteins$FeatureLevelData$treatment<-summarised.proteins$FeatureLevelData$Run
+```
+#C. Table 2
+
+###  Create a matrix to measure the contrast using a subset of temperatures
+
+```{r}
+df3<-list()
+#copy summarised data to a separate list_df
+df3$ProteinLevelData<-summarised.proteins$ProteinLevelData
+df3$FeatureLevelData<-summarised.proteins$FeatureLevelData
+
+#choose three temps to contrast around the midpoint
+
+temps_mid<-c("47.6","51","54")
+
+#then create a contrast matrix without the reference channel 
+
+comparison_mid<-make_contrast_matrix(df3,temps=temps_mid)
+
+
+```
+
+#D. As in Figure 5, panel E Fit models using filtered data which only considers the variance from the selected contrasts
+```{r}
+
+middle_data<-list()
+comparison_middle<-comparison_mid[which(!comparison_mid==0)]|>as.matrix()|>t()
+rownames(comparison_middle)<-"DIM"
+colnames(comparison_middle)<-colnames(comparison_mid)[which(!comparison_mid==0)]
+
+middle_data$ProteinLevelData<-df3$ProteinLevelData[df3$ProteinLevelData$Condition%in%colnames(comparison_middle),]
+
+
+```
+
+#E. As in Figure 5, panel F to fit linear mixed models with groupComparisons from MSstatsTMT
+
+```{r}
+
+DIM_middle<-MSstatsTMT::groupComparisonTMT(
+middle_data,
+contrast.matrix = comparison_middle,
+moderated = FALSE,
+adj.method = "BH",
+remove_norm_channel = TRUE,
+remove_empty_channel = TRUE,
+save_fitted_models = TRUE,
+use_log_file = FALSE,
+append = FALSE,
+verbose = TRUE,
+log_file_path = NULL
+)
+
+```
