@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-#With dataset 3b, this vignette will outline OnePot processed datasets at the protein level and evaluate MSstatsTMT statistical modeling.
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -37,15 +37,16 @@ library(ggrepel)
 theme_set(theme_bw())
 
 ```
+#With dataset 3b, this vignette will outline OnePot processed datasets at the protein level and evaluate TPP, NPARC, SCAM and MSstatsTMT statistical modeling.
 
 #A. Data Import
 
 ### Import option 1: Read Protein file from folder
 
 ```{r}
-CETSA_OnePot<-readxl::read_xlsx("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_Proteins.xlsx")
+CETSA_OnePot<-readxl::read_xlsx("D:/OnePot/Proteins.xlsx")
 colnames(CETSA_OnePot) <- stringr::str_replace_all(colnames(CETSA_OnePot),"[:punct:]| ",".")
-CETSA_OnePot_PSMs<-read.delim("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPPStauro_Fx_PSMs.txt")
+CETSA_OnePot_PSMs<-read.delim("D:/OnePot/PSMs.txt")
 colnames(CETSA_OnePot) <- stringr::str_replace_all(colnames(CETSA_OnePot),"[:punct:]| ",".")
 #save original data
 df<-CETSA_OnePot
@@ -58,7 +59,7 @@ head(CETSA_OnePot)
 Read annotation file
 
 ```{r}
-CETSA_OnePot_annotation<-data.table::fread("~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/OnePotTPP_annotation.csv")
+CETSA_OnePot_annotation<-data.table::fread("D:/OnePot/OnePotTPP_annotation.csv")
 
 
 ```
@@ -99,7 +100,7 @@ MSstats_input<-list(ProteinLevelData=PD_df,FeatureLevelData=NA)
 ```
 
 
-#D. GroupComparisonTMT DMSO OnePot vs 25x
+#D. GroupComparisonTMT DMSO OnePot vs 25x as in Figure 8, Panel D for PD protein summary and panel E
 
 ```{r}
 contrast.matrix<-matrix(ncol=5,nrow=1)
@@ -121,7 +122,7 @@ DIM_DMSOvs25x<-MSstatsTMT::groupComparisonTMT(MSstats_input,
 
 ```{r}
 #read in protein file
-WD<-"~/work/ivanovlab/figueroa-navedo.a/OnePot_dataset/CETSA_onePot/OnePot/"
+WD<-"D:/OnePot/"
 h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
 setwd(WD)
 Proteins<-data.frame()
@@ -138,7 +139,7 @@ kinase_df<-kinases|>dplyr::inner_join(Proteins,relationship="many-to-many")|>dpl
 
 
 ```
-#F. Figure 4, panel A,  Read in TPP processed PD results with TPP statistical models to compare against OnePot
+#F. Figure 7, panel A,  Read in TPP processed PD results with TPP statistical models to compare against OnePot
 
 ```{r}
 
@@ -160,7 +161,7 @@ dev.off()
 
 ```
 
-#F. Figure 4, panel B: Read in TPP processed PD results with NPARC statistical models to compare against OnePot
+#F. Figure 7, panel B: Read in TPP processed PD results with NPARC statistical models to compare against OnePot
 
 ```{r}
 
@@ -189,7 +190,7 @@ dev.off()
 ```
 
 
-#G. Figure 4 panel C, Read in TPP processed PD results with SCAM statistical models to compare against OnePot
+#G. Figure 7 panel C, Read in TPP processed PD results with SCAM statistical models to compare against OnePot
 
 ```{r}
 Benchmarks_external<-append(list("3a: TPP proc.
@@ -207,7 +208,7 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#07fff8","#7b057b","#1d54
 dev.off() 
 ```
 
-#H. Figure 8, panel D: Read in TPP processed PD results with MSstatsTMT statistical models to compare against OnePot
+#H. Figure 7, panel D: Read in TPP processed PD results with MSstatsTMT statistical models to compare against OnePot
 
 ```{r}
 Benchmarks_external<-append(list("3a: TPP proc. 

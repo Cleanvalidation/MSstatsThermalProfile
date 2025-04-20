@@ -2,15 +2,15 @@
 title: "Vignette13"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette13}
+%\VignetteIndexEntry{Vignette13}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----
-
-```{r, include = FALSE}
+  ---
+  
+  ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+collapse = TRUE,
+comment = "#>"
 )
 ```
 
@@ -37,139 +37,166 @@ theme_set(theme_bw())
 **Use getwd(your_working_directory) to get a folder where your PSM data is stored**
 
 ```{r}
-WD<-"D:/"
-h<-list.files(WD,pattern="PSMs.txt")|>as.list()
-setwd(WD)
-df<-purrr::map(h,function(x) read.delim(x)) |> dplyr::bind_rows()
 
-PSMs<-df
-df<-as.data.frame(df)
-#Filter out channel 131C
-df<-df[,!stringr::str_detect(names(df),"Abundance.131C")]
-#rename 131C to 131
-names(df)<-stringr::str_replace(names(df),"131N","131")
+# h<-list.files(WD,pattern="PSMs")|>as.list()
+# 
+# df<-purrr::map(h,function(x) readxl::read_xlsx(path=paste0(WD,"/",x),.name_repair = "universal")) |> dplyr::bind_rows()
+# head(df)
+
 ```
 
-Annotation File Generation
-
-### Option 1: Generate annotation file
+### Import option 2: Read PSM file from folder
 
 ```{r}
- 
-PD_df<-df|>dplyr::select(Spectrum.File,File.ID,dplyr::starts_with("Abundance"))|>dplyr::mutate(Fraction=stringr::str_remove(File.ID,"F[:digit:]."))|>dplyr::mutate(treatment=ifelse(stringr::str_detect(Spectrum.File,"V|DMSO"),"vehicle","treated"))
+CETSA_OnePot<-data.table::fread("D:/")
+colnames(CETSA_OnePot) <- stringr::str_replace_all(colnames(CETSA_OnePot),"[:punct:]| ",".")
 
+#save original data
+df<-OnePot
+head(OnePot)
+```
 
-PD_df<-PD_df|>tidyr::pivot_longer(cols=colnames(PD_df)[stringr::str_detect(colnames(PD_df),"Abundance")],names_to="Channel",values_to="Abundance")|>dplyr::select(-Abundance)|>dplyr::distinct()|>dplyr::mutate(Channel=stringr::str_extract(Channel,"[[:digit:]]+[N|C]|[:digit:][:digit:][:digit:]"),File.ID=stringr::str_extract(File.ID,"F[:digit:]"),Condition=paste0(Channel,"_",treatment))
+#B. Annotation File Import
+Read annotation file
 
-Mapping<-PD_df|>dplyr::select(treatment,File.ID)|>dplyr::distinct()|>dplyr::group_by(treatment)|>dplyr::mutate(TechRepMixture=seq(1:dplyr::n()))|>dplyr::ungroup()
-# #set mapping between temperatures and channels
-temps<-set_temps(10,c("37.3","40.2","44.9","47.6","51","54","57","61.8","64.1","67"))
-#TMT11 was used but the 75C temperature was filtered out
+```{r}
+OnePot_annotation<-data.table::fread("D:/OnePotTPP_annotation.csv")
 
-#add temperatures
-df_annotation<-PD_df|>dplyr::select(Spectrum.File,Channel,File.ID,Fraction,Condition)|>dplyr::distinct()|>dplyr::inner_join(temps,by="Channel")|>dplyr::inner_join(Mapping)
-
-#Add bioreplicate, mixture and run
-df_annotation$BioReplicate<-ifelse(df_annotation$temperature==min(df_annotation$temperature),"Norm",paste0(df_annotation$Channel,"_",df_annotation$treatment))
-
-df_annotation$Mixture<-paste0(df_annotation$treatment,"_",
-                                           df_annotation$TechRepMixture)
-df_annotation$Run<-df_annotation$Spectrum.File
+class(OnePot_annotation$TechRepMixture)<-"numeric"
+OnePot_annotation$TechRepMixture<-1
+OnePot_annotation$Mixture<-1
+OnePot_annotation$Condition<-stringr::str_remove(OnePot_annotation$BioReplicate,"_rep[:digit:]")
 
 ```
 
+#C. Data processing with MSstatsTMT
 
-
-#B. Table 1, steps 1 and 2 
 Import the data into MSStatsTMT
 
 ```{r}
 
-processed.features <- MSstatsTMT::PDtoMSstatsTMTFormat(df,
-                                                    df_annotation,
-                                                    which.proteinid = "Master.Protein.Accessions",
-                                                    useNumProteinsColumn = FALSE,
-                                                    useUniquePeptide = TRUE,
-                                                    rmPSM_withfewMea_withinRun = TRUE,
-                                                    rmProtein_with1Feature = TRUE,
-                                                    summaryforMultipleRows = max,
-                                                    use_log_file = FALSE,
-                                                    append=FALSE,
-                                                    verbose=TRUE)
+
+processed.features <- MSstatsTMT::PDtoMSstatsTMTFormat(OnePot,
+                                                       OnePot_annotation,
+                                                       which.proteinid = "Master.Protein.Accessions",
+                                                       useNumProteinsColumn = FALSE,
+                                                       useUniquePeptide = TRUE,
+                                                       rmPSM_withfewMea_withinRun = TRUE,
+                                                       rmProtein_with1Feature = TRUE,
+                                                       summaryforMultipleRows = max,
+                                                       use_log_file = FALSE,
+                                                       append=FALSE,
+                                                       verbose=TRUE)
 ```
-### Table 1 steps 4-6
-Summarize the peptide data into proteins
-
-```{r}
-processed.features$Condition<-as.character(processed.features$Condition)
-processed.features$Condition[stringr::str_detect(processed.features$Condition,"126")]<-"Norm"
-
-summarised.proteins <- MSstatsTMT::proteinSummarization(
-  data = processed.features,
-  method = "msstats",
-  global_norm = FALSE,
-  reference_norm = TRUE,
-  MBimpute=TRUE,
-  use_log_file=FALSE,
-  append=FALSE,
-  remove_norm_channel=TRUE,
-  remove_empty_channel=TRUE)
-
-summarised.proteins$ProteinLevelData<-summarised.proteins$ProteinLevelData|>dplyr::inner_join(temps,by="Channel")
-summarised.proteins$FeatureLevelData<-summarised.proteins$FeatureLevelData|>dplyr::inner_join(temps,by="Channel")
-summarised.proteins$ProteinLevelData$treatment<-summarised.proteins$ProteinLevelData$Run
-summarised.proteins$FeatureLevelData$treatment<-summarised.proteins$FeatureLevelData$Run
-```
-#C. Table 2
-
-###  Create a matrix to measure the contrast using a subset of temperatures
-
-```{r}
-df3<-list()
-#copy summarised data to a separate list_df
-df3$ProteinLevelData<-summarised.proteins$ProteinLevelData
-df3$FeatureLevelData<-summarised.proteins$FeatureLevelData
-
-#choose three temps to contrast around the midpoint
-
-temps_mid<-c("47.6","51","54")
-
-#then create a contrast matrix without the reference channel 
-
-comparison_mid<-make_contrast_matrix(df3,temps=temps_mid)
-
-
-```
-
-#D. As in Figure 5, panel E Fit models using filtered data which only considers the variance from the selected contrasts
-```{r}
-
-middle_data<-list()
-comparison_middle<-comparison_mid[which(!comparison_mid==0)]|>as.matrix()|>t()
-rownames(comparison_middle)<-"DIM"
-colnames(comparison_middle)<-colnames(comparison_mid)[which(!comparison_mid==0)]
-
-middle_data$ProteinLevelData<-df3$ProteinLevelData[df3$ProteinLevelData$Condition%in%colnames(comparison_middle),]
-
-
-```
-
-#E. As in Figure 5, panel F to fit linear mixed models with groupComparisons from MSstatsTMT
+#D. Summarize the peptide data into proteins
 
 ```{r}
 
-DIM_middle<-MSstatsTMT::groupComparisonTMT(
-middle_data,
-contrast.matrix = comparison_middle,
-moderated = FALSE,
-adj.method = "BH",
-remove_norm_channel = TRUE,
-remove_empty_channel = TRUE,
-save_fitted_models = TRUE,
-use_log_file = FALSE,
-append = FALSE,
-verbose = TRUE,
-log_file_path = NULL
+
+summarised.proteins <- MSstatsTMT::proteinSummarization(data = processed.features,
+                                                        method = "Median",
+                                                        global_norm = FALSE,
+                                                        reference_norm = FALSE,
+                                                        MBimpute=TRUE,
+                                                        use_log_file=FALSE,
+                                                        append=FALSE,
+                                                        remove_norm_channel=FALSE,
+                                                        remove_empty_channel=FALSE)
+```
+#E. Visualize a profile plot for MEK2
+
+```{r}
+
+MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="P36507")
+```
+
+#F. Fit linear mixed models with groupComparisons from MSstatsTMT
+
+```{r}
+DIM_OnePot<-groupComparisonTMT(
+  summarised.proteins,
+  contrast.matrix = "pairwise",
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
 )
+
+```
+#G. Compare DMSO vs 25x staurosporine as in Figure 7, Panels D-F
+
+```{r}
+contrast.matrix<-matrix(nrow=1,ncol=5)
+colnames(contrast.matrix)<-unique(df3$ProteinLevelData$Condition)
+contrast.matrix[1,]<-c(-1,0,0,0,1)
+rownames(contrast.matrix)<-"DMSOvs25x"
+DIM_OnePot_DMSOvs25x<-groupComparisonTMT(
+  df3,
+  contrast.matrix = contrast.matrix,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL
+)
+```
+#H. Compare DMSO vs all concentrations on avg
+
+```{r}
+contrast.matrix<-matrix(nrow=1,ncol=5)
+colnames(contrast.matrix)<-unique(df3$ProteinLevelData$Condition)
+contrast.matrix[1,]<-c(-1,1/4,1/4,1/4,1/4)
+rownames(contrast.matrix)<-"DMSOvsAllAvg"
+DIM_OnePot_DMSOvsAllAvg<-groupComparisonThermalProfiling(
+  df3,
+  contrast.matrix = contrast.matrix,
+  moderated = FALSE,
+  adj.method = "BH",
+  remove_norm_channel = TRUE,
+  remove_empty_channel = TRUE,
+  save_fitted_models = TRUE,
+  use_log_file = FALSE,
+  append = FALSE,
+  verbose = TRUE,
+  log_file_path = NULL,
+  missing_timepoint = "replace",
+  replacement=list("131_vehicle" = c("130C_vehicle"))
+)
+```
+#I. Read in Human Kinome accessions and remove isoforms
+```{r}
+WD<-"D:/"
+h<-list.files(WD,pattern="Proteins.xlsx")|>as.list()
+setwd(WD)
+Proteins<-data.frame()
+Proteins<-lapply(h,function(x) readxl::read_xlsx(paste0(WD,x))) |> dplyr::bind_rows()|>dplyr::select(Accession,"Gene Symbol")|>dplyr::rename("GeneSymbol"="Gene Symbol")|>dplyr::distinct()
+#Read in human kinome (522 proteins)
+kinases<-read.csv(paste0(WD,"/HumanKinome_040920.csv"))
+
+#remove isoforms from UniProt accessions
+df<-df|>dplyr::mutate(Accession=stringr::str_remove(Master.Protein.Accessions,"-[[:digit:]]+"))|>dplyr::distinct()
+
+
+#join Uniprot IDs to original DF
+kinase_df<-kinases|>dplyr::inner_join(df,relationship="many-to-many")|>dplyr::select(Accession) |> dplyr::distinct()
+
+```
+#J. MSstats interactors are defined 
+
+```{r}
+#collect interactions from MSstatsTMT
+
+MSstat_hits<-unique(DIM_OnePot_DMSOvs25x$ComparisonResult$Protein[DIM_OnePot_DMSOvs25x$ComparisonResult$adj.pvalue<0.05])
+#remove shared protein accessions
+MSstat_hits<-MSstat_hits[!stringr::str_detect(MSstat_hits,";")]
 
 ```
