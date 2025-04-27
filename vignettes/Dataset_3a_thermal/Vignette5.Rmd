@@ -372,7 +372,7 @@ kinase_df<-kinases
 ```
 
 # J. Figures 3, S-17 S-19 and S-21
-###Panel C, row 1
+###Panel A, row 1
 
 For the total number of proteins
 
@@ -389,7 +389,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Total_prot,function(x) sum(as.character(x)%i
 
 Total_prot_n<-purrr::map2(Total_prot,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins (unique protein groups):\n from PD",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-###Panel C, row 2
+###Panel A, row 2
 output from TPP processing
 
 ```{r}
@@ -404,7 +404,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Output_proc,function(x) sum(x%in%kinases))
 
 Output_proc_n<-purrr::map2(Output_proc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after \n TPP normalization (Table 1)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-### Panel C, row 3
+### Panel A, row 3
 Statistical model fit convergence
 
 ```{r}
@@ -420,7 +420,7 @@ Benchmarks_TPPproc_targ<-purrr::map(Benchmarks_TPPproc,function(x) sum(x%in%kina
 
 Benchmarks_TPPproc_n<-purrr::map2(Benchmarks_TPPproc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: converged fit\n(Table 2, steps 1-3)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-### Panel C, row 4
+### Panel A, row 4
 For proteins that passed the R\^2 and plateau filters
 
 ```{r}
@@ -440,7 +440,7 @@ Benchmarks_TPPproc_targ<-
 
 Benchmarks_TPPproc_filt_n<-purrr::map2(Benchmarks_TPPproc_filt,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(x),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after filtering \n(Table 2, steps 1-4)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
 ```
-### Panel C, row 5
+### Panel A, row 5
 For differentially expressed proteins
 
 ```{r}
@@ -700,4 +700,319 @@ ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2C7FB8","#7b057b","#2C7F
 
 dev.off() 
 ```
+#O. Figure S-18
 
+For the total number of proteins
+
+```{r}
+
+Total_prot<-list("TPP"=unique(PD_df$Accession),"NPARC"=unique(PD_df$Accession),"SCAM"=unique(PD_df$Accession),"MSstatsTMT"=unique(PD_df$Accession))
+#remove shared accessions
+Total_prot<-lapply(Total_prot,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Total_prot<-lapply(Total_prot,function(x) as.character(x)|>na.omit())
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Total_prot,function(x) sum(as.character(x)%in%kinases))
+
+Total_prot_n<-purrr::map2(Total_prot,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins (unique protein groups):\n from PD",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+###output from TPP processing
+
+```{r}
+Output_proc<-list("TPP sigmoid"=unique(Human_TPPnorm_Proteins$normData$Protein),"NPARC"=unique(Human_TPPnorm_Proteins$normData$Protein),"SCAM"=unique(Human_TPPnorm_Proteins$normData$Protein),"MSstatsTMT"=unique(Human_TPPnorm_Proteins$normData$Protein))
+#remove shared accessions
+Output_proc<-lapply(Output_proc,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Output_proc<-lapply(Output_proc,function(x) as.character(x)|>na.omit())
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Output_proc,function(x) sum(x%in%kinases))
+
+Output_proc_n<-purrr::map2(Output_proc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after \n TPP normalization (Table 1)",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+### Statistical model fit convergence
+
+```{r}
+Benchmarks_TPPproc<-list("TPP sigmoid"=unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$model_converged_treated_1 & TPPtr_human_results$model_converged_treated_2 & TPPtr_human_results$model_converged_vehicle_1 & TPPtr_human_results$model_converged_vehicle_2]),"MSstatsTMT"=unique(as.character(DIM_late$ComparisonResult$Protein[is.na(DIM_late$ComparisonResult$issue)])))
+#remove shared accessions
+Benchmarks_TPPproc<-lapply(Benchmarks_TPPproc,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Benchmarks_TPPproc<-lapply(Benchmarks_TPPproc,function(x) as.character(x)|>na.omit())
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Benchmarks_TPPproc,function(x) sum(x%in%kinases))
+
+Benchmarks_TPPproc_n<-purrr::map2(Benchmarks_TPPproc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: converged fit\n(Table 2, steps 1-3)",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+### For proteins that passed the R\^2 and plateau filters
+
+```{r}
+TPPtr_filters<-unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$passed_filter_vehicle_1_vs_treated_1&TPPtr_human_results$passed_filter_vehicle_2_vs_treated_2])
+#remove shared accessions
+TPPtr_filters<-TPPtr_filters[!stringr::str_detect(TPPtr_filters,";")]
+#remove missing values
+TPPtr_filters<-TPPtr_filters|>na.omit()
+
+
+Benchmarks_TPPproc_filt<-purrr::map2(Benchmarks_TPPproc,names(Benchmarks_TPPproc),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters),sum(x%in%x)))
+
+Benchmarks_TPPproc_filt<-lapply(Benchmarks_TPPproc_filt,function(x) as.character(x)|>na.omit())
+#verify if targets are present in the filtered data
+Benchmarks_TPPproc_targ<-
+  purrr::map2(Benchmarks_TPPproc,names(Benchmarks_TPPproc),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters& x%in%kinases),sum(x%in%kinases)))
+
+Benchmarks_TPPproc_filt_n<-purrr::map2(Benchmarks_TPPproc_filt,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(x),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after filtering \n(Table 2, steps 1-4)",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+### For differentially expressed proteins
+
+```{r}
+Benchmarks_TPPproc_p<-list("TPP sigmoid"=unique(TPPtr_human_results$Protein_ID[which(!is.na(TPPtr_human_results$pVal_adj_vehicle_1_vs_treated_1<0.05&TPPtr_human_results$pVal_adj_vehicle_2_vs_treated_2<0.05&TPPtr_human_results$R_sq_treated_1>0.8|TPPtr_human_results$R_sq_treated_2>0.8&sign(TPPtr_human_results$diff_meltP_vehicle_1_vs_treated_1)==sign(TPPtr_human_results$diff_meltP_vehicle_2_vs_treated_2)&TPPtr_human_results$passed_filter_vehicle_1_vs_treated_1&TPPtr_human_results$passed_filter_vehicle_2_vs_treated_2))]),#R2 and plateau filters
+                           "NPARC"=unique(as.character(NPARC_test_emp$id)[NPARC_test_emp$pAdj<0.05&as.character(NPARC_test_emp$id) %in% TPPtr_filters]),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
+#remove shared accessions
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) as.character(x)|>na.omit())
+
+#verify if differentially abundant proteins are present in the filtered data
+Benchmarks_TPPproc_targ<-
+  purrr::map2(Benchmarks_TPPproc_p,names(Benchmarks_TPPproc_p),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters&x%in%kinases),sum(x%in%kinases)))
+
+Benchmarks_TPPproc_p_n<-purrr::map2(Benchmarks_TPPproc_p,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: differential abundance \n(Table 2, steps 1-5)",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+### R files
+
+```{r}
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) as.character(x)|>na.omit())
+
+names(Benchmarks_TPPproc_p)<-c("TPP proc.
+TPP stat. model","TPP proc. 
+NPARC stat. model","TPP proc.
+SCAM stat. model","TPP proc.
+MSstatsTMT stat. model")
+Thermallate_spline_TPPprocesed<-Benchmarks_TPPproc_p
+saveRDS(Dataset3alate_spline_TPPprocesed,"Thermallate_sigmoid_TPPprocesed.RDS")
+```
+### Keep kinase interactors from each result
+
+```{r}
+NPARC_human<-NPARC_test_emp|>dplyr::filter(id %in% kinases)|>dplyr::mutate(Protein=id)
+
+TPP_human<-TPPtr_human_results|>dplyr::filter(ProteinID %in% kinases)|>dplyr::mutate(Protein=ProteinID)
+
+SCAM_human<-DIM_Human_SCAM|>dplyr::filter(Accession %in% kinases)|>dplyr::mutate(Protein=Accession)
+
+MSstat_human<-DIM_late$ComparisonResult|>dplyr::filter(Protein%in%kinases)
+
+Stat_mod<-dplyr::bind_rows(proteins1)|>as.data.frame()|>dplyr::filter(Protein%in% c("P36507","Q02750","Q13188","O14757"))|>dplyr::mutate(Accession=Protein)|>dplyr::left_join(TPP_human)|>dplyr::left_join(NPARC_human|>dplyr::select(-df1,-df2))|>dplyr::left_join(SCAM_human)|>dplyr::left_join(MSstat_human)|>dplyr::group_by(Accession)|>dplyr::mutate(NPARC_adjpval=pAdj,TPP_adjpval=NaN,SCAM_adjpval=ATE_padjBH,MSstats_adjpval=adj.pvalue)|>dplyr::group_split()
+
+
+```
+
+### Append MSstatsTMT fitted models to the data
+
+```{r}
+
+DIM_targets<-DIM_late$FittedModel[which(names(DIM_late$FittedModel) %in% c("P36507","Q02750","Q13188","O14757"))]
+fitted_MSstat<-purrr::map2(Stat_mod,DIM_targets,function(x,y)x|>dplyr::mutate(model=list(y)))|>dplyr::bind_rows()
+```
+
+
+#P. Plot the curves For Figures S-18 S-20 and S-22
+
+```{r}
+#identify significant kinases per method
+targets<-fitted_MSstat|>dplyr::mutate(treatment=stringr::str_extract(Experiment,"[[:lower:]]+"))|>dplyr::group_by(Protein)|>dplyr::group_split()
+
+nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
+target_curves<-lapply(targets,function(x){plotMethods(x,temps=c("54","57","61.8"),labels=c("A","B","C","D"),processing="TPP",fit="Sigmoid")
+})
+names(target_curves)<-nam
+
+#set path
+path<-getwd()
+
+target_curves$P36507
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_Sigmoid_P36507.tiff")
+
+target_curves$Q02750
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_Sigmoid_Q02750.tiff")
+
+target_curves$Q13188
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_Sigmoid_Q13188.tiff")
+
+target_curves$O14757
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_TPP_Sigmoid_O14757.tiff")
+```
+
+## Q. Figure S-25, panel A, bar charts
+
+```{r}
+bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
+
+bar_human$Analysis<-factor(bar_human$Analysis,levels=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+
+col<-data.frame(Analysis=factor(unique(bar_human$Analysis),levels=c("TPP","NPARC","SCAM","MSstatsTMT")),"stat_model"=c("#FEC44F","#D95F0E","#2C7FB8","#07fff8"))
+
+
+bar_human<-bar_human|>dplyr::inner_join(col)
+
+bar_human$Analysis<-factor(paste0("TPP proc., ",bar_human$Analysis," model"),levels=c("TPP proc., TPP sigmoid model","TPP proc., NPARC model","TPP proc., SCAM model","TPP proc., MSstatsTMT model"))
+
+
+bar_human$Steps<-factor(bar_human$Steps,levels=c("Proteins: differential abundance \n(Table 2, steps 1-5)","Proteins: after filtering \n(Table 2, steps 1-4)","Proteins: converged fit\n(Table 2, steps 1-3)","Proteins: after \n TPP normalization (Table 1)","Proteins (unique protein groups):\n from PD"))
+
+
+bar_human$Protein_targ<-paste0(bar_human$Proteins," ","(",bar_human$ver_targets,")")
+
+bHuman<-ggplot(bar_human|>dplyr::group_by(Analysis),mapping=aes(x=Steps,y=as.integer(Proteins),alpha=Steps,fill=stat_model))+geom_col(stat_count=aes(x=Steps,y=Proteins),colour="black")+scale_y_continuous(limits=c(0,15000),breaks = c(0,6000,12000))+ylab("Number of proteins remaining after each step")+coord_flip()+facet_wrap(~Analysis,nrow=1, labeller = label_wrap_gen(width=15))+scale_fill_manual(values=c("#2C7FB8","#07fff8","#FEC44F","#D95F0E"))+
+  xlab("Steps")+
+  geom_text(aes(label=Protein_targ),size=8,position=position_dodge(width=0.5),hjust=-0.150,alpha=0.9)+theme(text=element_text(size=25,                          color = "black"),axis.text.x = element_text(size=25,face="bold"),axis.text.y=element_text(size=25,face="bold"),
+                                                                                                            axis.title.x = element_text(size=25),axis.title.y=element_text(size=25),strip.text.x=element_text(size=25),legend.position="none", strip.placement = "outside")
+
+bHuman
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Bar_charts_TPPsigmoid.tiff")
+```
+# R. Figures S-27
+###Panel A, row 1
+
+For the total number of proteins
+
+```{r}
+
+Total_prot<-list("TPP"=unique(PD_df$Accession),"NPARC"=unique(PD_df$Accession),"SCAM"=unique(PD_df$Accession),"MSstatsTMT"=unique(PD_df$Accession))
+#remove shared accessions
+Total_prot<-lapply(Total_prot,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Total_prot<-lapply(Total_prot,function(x) as.character(x)|>na.omit())
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Total_prot,function(x) sum(as.character(x)%in%kinases))
+
+Total_prot_n<-purrr::map2(Total_prot,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins (unique protein groups):\n from PD",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+###Panel A, row 2
+output from TPP processing
+
+```{r}
+Output_proc<-list("TPP"=unique(Human_TPPnorm_Proteins$normData$Protein),"NPARC"=unique(Human_TPPnorm_Proteins$normData$Protein),"SCAM"=unique(Human_TPPnorm_Proteins$normData$Protein),"MSstatsTMT"=unique(Human_TPPnorm_Proteins$normData$Protein))
+#remove shared accessions
+Output_proc<-lapply(Output_proc,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Output_proc<-lapply(Output_proc,function(x) as.character(x)|>na.omit())
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Output_proc,function(x) sum(x%in%kinases))
+
+Output_proc_n<-purrr::map2(Output_proc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after \n TPP normalization (Table 1)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+### Panel A, row 3
+Statistical model fit convergence
+
+```{r}
+Benchmarks_TPPproc<-list("TPP"=unique(TPP_human_results_F$uniqueID[!is.na(TPP_human_results_F$p_adj_NPARC)]),"NPARC"=unique(as.character(NPARC_test_emp$id)[!is.na(NPARC_test_emp$pAdj)]),"SCAM"=unique(as.character(DIM_Human_SCAM$Accession[!is.na(DIM_Human_SCAM$ATE_padjBH)])),"MSstatsTMT"=unique(as.character(DIM_mid$ComparisonResult$Protein[is.na(DIM_mid$ComparisonResult$issue)])))
+#remove shared accessions
+Benchmarks_TPPproc<-lapply(Benchmarks_TPPproc,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Benchmarks_TPPproc<-lapply(Benchmarks_TPPproc,function(x) as.character(x)|>na.omit())
+
+#Benchmarks_TPPproc<-purrr::map2(Benchmarks_TPPproc,Output_proc,function(x,y)x[x%in%y])
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_TPPproc_targ<-purrr::map(Benchmarks_TPPproc,function(x) sum(x%in%kinases))
+
+Benchmarks_TPPproc_n<-purrr::map2(Benchmarks_TPPproc,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: converged fit\n(Table 2, steps 1-3)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+### Panel A, row 4
+For proteins that passed the R\^2 and plateau filters
+
+```{r}
+TPPtr_filters<-unique(TPPtr_human_results$Protein_ID[TPPtr_human_results$passed_filter_vehicle_1_vs_treated_1&TPPtr_human_results$passed_filter_vehicle_2_vs_treated_2])
+#remove shared accessions
+TPPtr_filters<-TPPtr_filters[!stringr::str_detect(TPPtr_filters,";")]
+#remove missing values
+TPPtr_filters<-TPPtr_filters|>na.omit()
+
+
+Benchmarks_TPPproc_filt<-purrr::map2(Benchmarks_TPPproc,names(Benchmarks_TPPproc),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters),sum(x%in%x)))
+
+Benchmarks_TPPproc_filt<-lapply(Benchmarks_TPPproc_filt,function(x) as.character(x)|>na.omit())
+#verify if targets are present in the filtered data
+Benchmarks_TPPproc_targ<-
+  purrr::map2(Benchmarks_TPPproc,names(Benchmarks_TPPproc),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters& x%in%kinases),sum(x%in%kinases)))
+
+Benchmarks_TPPproc_filt_n<-purrr::map2(Benchmarks_TPPproc_filt,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(x),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: after filtering \n(Table 2, steps 1-4)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+### Panel A, row 5
+For differentially expressed proteins
+
+```{r}
+Benchmarks_TPPproc_p<-list("TPP"=unique(TPP_human_results_F$uniqueID[TPP_human_results_F$p_adj_NPARC<0.05]),#R2 and plateau filters
+                           "NPARC"=unique(as.character(NPARC_test_emp$id)[NPARC_test_emp$pAdj<0.05&as.character(NPARC_test_emp$id) %in% TPPtr_filters]),"SCAM"=unique(DIM_Human_SCAM$Accession[DIM_Human_SCAM$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_mid$ComparisonResult$Protein[DIM_mid$ComparisonResult$adj.pvalue<0.05]))
+#remove shared accessions
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) x[!stringr::str_detect(x,";")])
+#remove missing values
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) as.character(x)|>na.omit())
+
+#verify if differentially abundant proteins are present in the filtered data
+Benchmarks_TPPproc_targ<-
+  purrr::map2(Benchmarks_TPPproc_p,names(Benchmarks_TPPproc_p),function(x,y) ifelse(y=="NPARC",sum(x %in% TPPtr_filters&x%in%kinases),sum(x%in%kinases)))
+
+Benchmarks_TPPproc_p_n<-purrr::map2(Benchmarks_TPPproc_p,Benchmarks_TPPproc_targ,function(x,y) data.frame(Proteins=as.character(length(unique(x))),ver_targets=as.character(y)))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins: differential abundance \n(Table 2, steps 1-5)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+##Save R files
+
+```{r}
+Benchmarks_TPPproc_p<-lapply(Benchmarks_TPPproc_p,function(x) as.character(x)|>na.omit())
+
+names(Benchmarks_TPPproc_p)<-c("TPP proc.
+TPP stat. model","TPP proc. 
+NPARC stat. model","TPP proc.
+SCAM stat. model","TPP proc.
+MSstatsTMT stat. model")
+Thermallate_spline_TPPprocesed<-Benchmarks_TPPproc_p
+saveRDS(Benchmarks_TPPproc_p,"Thermalmid_spline_TPPprocesed.RDS")
+```
+## Keep kinase interactors from each result
+
+```{r}
+NPARC_human<-NPARC_test_emp|>dplyr::filter(id %in% kinases)|>dplyr::mutate(Protein=id)
+
+TPP_human<-TPP_human_results_F|>dplyr::filter(uniqueID %in% kinases)|>dplyr::mutate(Protein=uniqueID)
+
+SCAM_human<-DIM_Human_SCAM|>dplyr::filter(Accession %in% kinases)|>dplyr::mutate(Protein=Accession)
+
+MSstat_human<-DIM_late$ComparisonResult|>dplyr::filter(Protein%in%kinases)
+
+Stat_mod<-dplyr::bind_rows(proteins1)|>as.data.frame()|>dplyr::filter(Protein%in% c("P36507","Q02750","Q13188","O14757"))|>dplyr::mutate(Accession=Protein)|>dplyr::left_join(TPP_human)|>dplyr::left_join(NPARC_human|>dplyr::select(-df1,-df2))|>dplyr::left_join(SCAM_human)|>dplyr::left_join(MSstat_human)|>dplyr::group_by(Accession)|>dplyr::mutate(NPARC_adjpval=pAdj,TPP_adjpval=p_adj_NPARC,SCAM_adjpval=ATE_padjBH,MSstats_adjpval=adj.pvalue)|>dplyr::group_split()
+
+
+```
+
+## S. Figure S-27 Panel A bar charts
+
+```{r}
+bar_human<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_TPPproc_n,Benchmarks_TPPproc_filt_n,Benchmarks_TPPproc_p_n)
+
+bar_human$Analysis<-factor(bar_human$Analysis,levels=c("TPP","NPARC","SCAM","MSstatsTMT"))
+
+col<-data.frame(Analysis=factor(unique(bar_human$Analysis),levels=c("TPP","NPARC","SCAM","MSstatsTMT")),"stat_model"=c("#FEC44F","#D95F0E","#2C7FB8","#07fff8"))
+
+
+bar_human<-bar_human|>dplyr::inner_join(col)
+
+bar_human$Analysis<-factor(paste0("TPP proc., ",bar_human$Analysis," model"),levels=c("TPP proc., TPP model","TPP proc., NPARC model","TPP proc., SCAM model","TPP proc., MSstatsTMT model"))
+
+
+bar_human$Steps<-factor(bar_human$Steps,levels=c("Proteins: differential abundance \n(Table 2, steps 1-5)","Proteins: after filtering \n(Table 2, steps 1-4)","Proteins: converged fit\n(Table 2, steps 1-3)","Proteins: after \n TPP normalization (Table 1)","Proteins (unique protein groups):\n from PD"))
+
+
+bar_human$Protein_targ<-paste0(bar_human$Proteins," ","(",bar_human$ver_targets,")")
+
+bHuman<-ggplot(bar_human|>dplyr::group_by(Analysis),mapping=aes(x=Steps,y=as.integer(Proteins),alpha=Steps,fill=stat_model))+geom_col(stat_count=aes(x=Steps,y=Proteins),colour="black")+scale_y_continuous(limits=c(0,15000),breaks = c(0,6000,12000))+ylab("Number of proteins remaining after each step")+coord_flip()+facet_wrap(~Analysis,nrow=1, labeller = label_wrap_gen(width=15))+scale_fill_manual(values=c("#2C7FB8","#07fff8","#FEC44F","#D95F0E"))+
+  xlab("Steps")+
+  geom_text(aes(label=Protein_targ),size=8,position=position_dodge(width=0.5),hjust=-0.150,alpha=0.9)+theme(text=element_text(size=25,                          color = "black"),axis.text.x = element_text(size=25,face="bold"),axis.text.y=element_text(size=25,face="bold"),
+                                                                                                            axis.title.x = element_text(size=25),axis.title.y=element_text(size=25),strip.text.x=element_text(size=25),legend.position="none", strip.placement = "outside")
+
+bHuman
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Bar_charts_TPPmid.tiff")
+```

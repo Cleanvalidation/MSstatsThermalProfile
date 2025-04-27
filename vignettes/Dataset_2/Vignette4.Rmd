@@ -423,7 +423,7 @@ Output_proc_n<-purrr::map2(Output_proc,Benchmarks_MSstatsTMTproc_targ,function(x
 Statistical model fit convergence
 
 ```{r}
-Benchmarks_MSstatsTMTproc<-list("TPP"=unique(TPPtr_Zebra_results$Protein_ID[TPPtr_Zebra_results$model_converged_Treatment_1 & TPPtr_Zebra_results$model_converged_Treatment_2 & TPPtr_Zebra_results$model_converged_Vehicle_1 & TPPtr_Zebra_results$model_converged_Vehicle_2]),"NPARC"=unique(NPARC_test_emp$id),"SCAM"=unique(DIM_Zebra$Accession),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein))
+Benchmarks_MSstatsTMTproc<-list("TPP"=unique(TPP_Zebra_results_F$uniqueID[!is.na(TPP_Zebra_results_F$p_adj_NPARC)]),"NPARC"=unique(NPARC_test_emp$id),"SCAM"=unique(DIM_Zebra$Accession),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein))
 
 Benchmarks_MSstatsTMTproc<-lapply(Benchmarks_MSstatsTMTproc,function(x) as.character(x)|>na.omit())
 
@@ -484,7 +484,7 @@ Benchmarks_MSstatsTMTproc_filt_n<-purrr::map2(Benchmarks_MSstatsTMTproc_filt,Ben
 For diferentially expressed proteins
 
 ```{r}
-Benchmarks_MSstatsTMTproc_p<-list("TPP"=unique(TPPtr_Zebra_results$Protein_ID[TPPtr_Zebra_results$pVal_adj_Vehicle_1_vs_Treatment_1<0.05 & TPPtr_Zebra_results$pVal_adj_Vehicle_2_vs_Treatment_2 < 0.05 & TPPtr_Zebra_results$Protein_ID %in% TPPtr_filters]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters])),"SCAM"=unique(DIM_Zebra$Accession[DIM_Zebra$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
+Benchmarks_MSstatsTMTproc_p<-list("TPP"=unique(TPP_Zebra_results_F$uniqueID[TPP_Zebra_results_F$p_adj_NPARC<0.05]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters])),"SCAM"=unique(DIM_Zebra$Accession[DIM_Zebra$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
 
 Benchmarks_MSstatsTMTproc_p<-lapply(Benchmarks_MSstatsTMTproc_p,function(x) as.character(x)|>na.omit())
 
@@ -530,18 +530,18 @@ nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
 target_curves<-lapply(targets,function(x){plotMethods(x,
                                                                temps=c("60.4","57.1","53.8"),
                                                                processing="MSstatsTMT",
-                                                               labels=c("E","F","G","H"),fit="Sigmoid")})
+                                                               labels=c("E","F","G","H"),fit="Spline")})
 names(target_curves)<-nam
 #get path
 path<-getwd()
 target_curves$Q0H2G3
-ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q0H2G3.tiff")
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_spline_Q0H2G3.tiff")
 
 target_curves$Q68SP3
-ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q68SP3.tiff")
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_spline_Q68SP3.tiff")
 
 target_curves$Q6NV46
-ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q6NV46.tiff")
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_spline_Q6NV46.tiff")
 ```
 
 #L. Figure S-23, Panel C bar charts
@@ -712,4 +712,208 @@ purrr::map2(compare_proc[4],colors[4],function(x,y)VennDiagram::venn.diagram(
 ))
 dev.off()
 
+```
+#O. Figure S-15, panels E-H curves
+
+```{r}
+Total_prot<-list("TPP"=unique(df$Master.Protein.Accessions),"NPARC"=unique(df$Master.Protein.Accessions),"SCAM"=unique(df$Master.Protein.Accessions),"MSstatsTMT"=unique(df$Master.Protein.Accessions))
+
+Total_prot<-lapply(Total_prot,function(x) as.character(x)|>na.omit())
+#Check for shared accessions and collapse isoforms
+Total_prot<-lapply(Total_prot,function(x) {
+  y<-x[!stringr::str_detect(x,";")]
+  y<-unique(stringr::str_remove(y,"-[:digit:]"))
+  print(paste0(length(y)," out of ",length(x)," proteins have unique protein groups"))
+  return(y)})
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_MSstatsTMTproc_targ<-purrr::map(Total_prot,function(x) sum(as.character(x)%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       )))
+
+Total_prot_n<-purrr::map2(Total_prot,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=length(unique(as.character(x))),ver_targets=y))|>dplyr::bind_rows()|>dplyr::mutate(Steps="PSMs from PD(unique protein groups):",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+##Then after MSstatsTMT processing
+
+```{r}
+Output_proc<-list("TPP"=unique(summarised.proteins$ProteinLevelData$Protein),"NPARC"=unique(summarised.proteins$ProteinLevelData$Protein),"SCAM"=unique(summarised.proteins$ProteinLevelData$Protein),"MSstatsTMT"=unique(summarised.proteins$ProteinLevelData$Protein))
+
+
+Output_proc<-lapply(Output_proc,function(x) as.character(x)|>na.omit())
+Output_proc<-lapply(Output_proc,function(x) {y<-x[!stringr::str_detect(x,";")]
+                    y<-unique(stringr::str_remove(y,"-[:digit:]"))
+                    return(y)})
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_MSstatsTMTproc_targ<-purrr::map(Output_proc,function(x) sum(as.character(x)%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       )))
+
+Output_proc_n<-purrr::map2(Output_proc,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=length(unique(as.character(x))),ver_targets=y))|>dplyr::bind_rows()|>dplyr::mutate(Steps="Proteins:\n aggregated after  \n MSstatsTMT proc.(Table 1)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+###Statistical model fit convergence
+
+```{r}
+Benchmarks_MSstatsTMTproc<-list("TPP"=unique(TPPtr_Zebra_results$Protein_ID[TPPtr_Zebra_results$model_converged_Treatment_1 & TPPtr_Zebra_results$model_converged_Treatment_2 & TPPtr_Zebra_results$model_converged_Vehicle_1 & TPPtr_Zebra_results$model_converged_Vehicle_2]),"NPARC"=unique(NPARC_test_emp$id),"SCAM"=unique(DIM_Zebra$Accession),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein))
+
+Benchmarks_MSstatsTMTproc<-lapply(Benchmarks_MSstatsTMTproc,function(x) as.character(x)|>na.omit())
+
+Benchmarks_MSstatsTMTproc<-lapply(Benchmarks_MSstatsTMTproc,function(x) {y<-x[!stringr::str_detect(x,";")]
+                    y<-unique(stringr::str_remove(y,"-[:digit:]"))
+                    return(y)})
+
+#verify if targets are present in the Statistical model fit convergence
+Benchmarks_MSstatsTMTproc_targ<-purrr::map(Benchmarks_MSstatsTMTproc,function(x) sum(as.character(x)%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       )))
+
+Benchmarks_MSstatsTMTproc_n<-purrr::map2(Benchmarks_MSstatsTMTproc,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=length(unique(x)),ver_targets=y))|>dplyr::bind_rows()|>dplyr::mutate(Steps="converged from stat. model\n(Table 2, steps 1-3)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+###For the proteins that passed the R\^2 and plateau filters
+
+```{r}
+TPPtr_filters<-unique(TPPtr_Zebra_results$Protein_ID[TPPtr_Zebra_results$passed_filter_Vehicle_1_vs_Treatment_1&TPPtr_Zebra_results$passed_filter_Vehicle_2_vs_Treatment_2])
+
+
+Benchmarks_MSstatsTMTproc_filt<-purrr::map2(Benchmarks_MSstatsTMTproc,names(Benchmarks_MSstatsTMTproc),function(x,y) ifelse(y=="NPARC",sum(as.character(x) %in% TPPtr_filters),sum(as.character(x)%in%x)))
+#verify if targets are present in the filtered data
+Benchmarks_MSstatsTMTproc_targ<-
+  purrr::map2(Benchmarks_MSstatsTMTproc,names(Benchmarks_MSstatsTMTproc),function(x,y) ifelse(y=="NPARC",sum(as.character(x) %in% TPPtr_filters& as.character(x)%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       )),sum(x%in%x&x%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       ))))
+
+Benchmarks_MSstatsTMTproc_filt_n<-purrr::map2(Benchmarks_MSstatsTMTproc_filt,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=x,ver_targets=y))|>dplyr::bind_rows()|>dplyr::mutate(Steps="after post-processing filtering \n(Table 2, steps 1-4)",Analysis=c("TPP","NPARC","SCAM","MSstatsTMT"))
+```
+###For diferentially expressed proteins
+
+```{r}
+Benchmarks_MSstatsTMTproc_p<-list("TPP sigmoid"=unique(TPPtr_Zebra_results$Protein_ID[TPPtr_Zebra_results$pVal_adj_Vehicle_1_vs_Treatment_1<0.05 & TPPtr_Zebra_results$pVal_adj_Vehicle_2_vs_Treatment_2 < 0.05 & TPPtr_Zebra_results$Protein_ID %in% TPPtr_filters]),"NPARC"=as.character(unique(NPARC_test_emp$id[NPARC_test_emp$pAdj<0.05&NPARC_test_emp$id %in% TPPtr_filters])),"SCAM"=unique(DIM_Zebra$Accession[DIM_Zebra$ATE_padjBH<0.05]),"MSstatsTMT"=unique(DIM_late$ComparisonResult$Protein[DIM_late$ComparisonResult$adj.pvalue<0.05]))
+
+Benchmarks_MSstatsTMTproc_p<-lapply(Benchmarks_MSstatsTMTproc_p,function(x) as.character(x)|>na.omit())
+
+#verify if differentially abundant proteins are present in the filtered data
+Benchmarks_MSstatsTMTproc_targ<-
+  purrr::map2(Benchmarks_MSstatsTMTproc_p,names(Benchmarks_MSstatsTMTproc_p),function(x,y) ifelse(y=="NPARC",sum(as.character(x) %in% TPPtr_filters&as.character(x)%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       )),sum(x%in%c(#"Q7ZUY3",#histone
+                                                                                                                               "Q6NV46",#stat3
+                                                                                                                               "Q68SP3",# stat5a,
+                                                                          # "A4QNT9",# stat5b,
+                                                                           #"Q90Y03",# aldh1a2,
+                                                                           "Q0H2G3"# aldh1a3,
+                                                                           #"F1QZU7",# aldh1a2.2,
+                                                                          # "A2BGR9",# aldh1a2.1,
+                                                                           #"F1QLV5",#nqo1,
+                                                                           #"F1Q7F3"
+                       ))))
+
+Benchmarks_MSstatsTMTproc_p_n<-purrr::map2(Benchmarks_MSstatsTMTproc_p,Benchmarks_MSstatsTMTproc_targ,function(x,y) data.frame(Proteins=length(unique(as.character(x))),ver_targets=y))|>dplyr::bind_rows()|>dplyr::mutate(Steps="differentially abundant \n(Table 2, steps 1-5)",Analysis=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+```
+##Save R files
+
+
+```{r}
+names(Benchmarks_MSstatsTMTproc_p)<-c("TPP stat. model","NPARC stat. model","SCAM stat. model","MSstatsTMT stat. model")
+
+saveRDS(Benchmarks_MSstatsTMTproc_p,"Zebra_MSstatsTMTprocesedsigmoid.RDS")
+```
+#P. Plot the curves Figures S-15, panels E-H and save data
+
+```{r}
+targets<-summarised.proteins$ProteinLevelData|>as.data.frame()|>dplyr::filter(Protein%in% c("Q6NV46","Q68SP3","Q0H2G3"))|>dplyr::mutate(Accession=Protein)|>dplyr::inner_join(Stat_mod)|>dplyr::group_by(Accession)|>dplyr::group_split()
+nam<-as.character(unique(dplyr::bind_rows(targets)$Protein))
+target_curves<-lapply(targets,function(x){plotMethods(x,
+                                                               temps=c("60.4","57.1","53.8"),
+                                                               processing="MSstatsTMT",
+                                                               labels=c("E","F","G","H"),fit="Sigmoid")})
+names(target_curves)<-nam
+#get path
+path<-getwd()
+target_curves$Q0H2G3
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q0H2G3.tiff")
+
+target_curves$Q68SP3
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q68SP3.tiff")
+
+target_curves$Q6NV46
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Curves_MSstatsTMT_sigmoid_Q6NV46.tiff")
+```
+
+#Q. Figure S-23, Panel C bar charts
+
+```{r}
+bar_Dataset2<-dplyr::bind_rows(Total_prot_n,Output_proc_n,Benchmarks_MSstatsTMTproc_n,Benchmarks_MSstatsTMTproc_filt_n,Benchmarks_MSstatsTMTproc_p_n)
+
+
+
+bar_Dataset2$Analysis<-factor(bar_Dataset2$Analysis,levels=c("TPP sigmoid","NPARC","SCAM","MSstatsTMT"))
+
+col<-data.frame(Analysis=factor(unique(bar_Dataset2$Analysis),levels=c("TPP","NPARC","SCAM","MSstatsTMT")),"stat_model"=c("#D95F0E","#FEC44F","#2C7FB8","#07fff8"))
+
+
+bar_Dataset2<-bar_Dataset2|>dplyr::inner_join(col)
+
+bar_Dataset2$Analysis<-factor(paste0("MSstatsTMT proc., ",bar_Dataset2$Analysis," stat. model"),levels=c("MSstatsTMT proc., TPP stat. model","MSstatsTMT proc., NPARC stat. model","MSstatsTMT proc., SCAM stat. model","MSstatsTMT proc., MSstatsTMT stat. model"))
+
+
+bar_Dataset2$Steps<-factor(bar_Dataset2$Steps,levels=c("differentially abundant \n(Table 2, steps 1-5)","after post-processing filtering \n(Table 2, steps 1-4)","converged from stat. model\n(Table 2, steps 1-3)","Proteins:\n aggregated after  \n MSstatsTMT proc.(Table 1)","PSMs from PD(unique protein groups):"))
+
+
+bar_Dataset2$Protein_targ<-paste0(bar_Dataset2$Proteins," ","(",bar_Dataset2$ver_targets,")")
+
+bDataset2<-ggplot(bar_Dataset2|>dplyr::group_by(Analysis),mapping=aes(x=Steps,y=Proteins,alpha=Steps,fill=stat_model))+geom_col(stat_count=aes(x=Steps,y=Proteins),colour="black")+ylab("Number of proteins remaining after each step")+coord_flip()+facet_wrap(~Analysis,nrow=1, labeller = label_wrap_gen(width=20))+scale_fill_manual(values=c("#2C7FB8","#07fff8","#D95F0E","#FEC44F"))+scale_y_continuous(limits=c(0,18000),breaks = c(0,6000,12000))+theme(text=element_text(size=25,                          color = "black"),axis.text.x = element_text(size=25,face="bold"),axis.text.y=element_text(size=25,face="bold"),strip.text.x=element_text(size=25),legend.position="none", strip.placement = "outside")+xlab("Steps")+geom_text(aes(label=Protein_targ),size=8,position=position_dodge(width=0.2),hjust=-0.05,alpha=0.9)+geom_rect(data = subset(bar_Dataset2, Analysis %in% "MSstatsTMT proc., MSstatsTMT stat. model"), 
+                          fill = NA, colour = "green", xmin = -Inf,xmax = Inf,
+            ymin = -Inf,ymax = Inf,size=2)
+
+path = getwd()
+bDataset2
+ggplot2::ggsave(path = path, width = 24, height = 6.5, device='tiff', dpi=600, filename = "Bar_charts_sigmoid_MSstatsTMT.tiff")
 ```
