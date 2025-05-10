@@ -41,9 +41,11 @@ Suggests:
     posterior,
     rmarkdown,
     rstan,
-    testthat (>= 3.0.0)
-    TPP
-    MSstatsTMT
+    testthat (>= 3.0.0),
+    TPP,
+    MSstatsTMT,
     NPARC
+Remotes:
+    github::CleanValidation/MSstatsThermalProfiler
 VignetteBuilder: knitr
 Config/testthat/edition: 3
