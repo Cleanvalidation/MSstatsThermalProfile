@@ -20,8 +20,7 @@ Imports:
     future,
     ggplot2,
     readxl,
-    tidyr,
-   
+    tidyr
 Depends: 
     R (>= 2.10)
 LazyData: true
