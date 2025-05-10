@@ -21,9 +21,7 @@ Imports:
     ggplot2,
     readxl,
     tidyr,
-    MSstats,
-    MsstatsTMT,
-    MSstatsConvert
+   
 Depends: 
     R (>= 2.10)
 LazyData: true
