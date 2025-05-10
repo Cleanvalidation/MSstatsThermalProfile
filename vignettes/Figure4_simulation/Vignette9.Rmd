@@ -16,7 +16,6 @@ devtools::load_all(".")
 ```
 
 ```{r setup}
-library(MSstatsThermalProfiler)
 library(scam)
 library(mgcv)
 library(marginaleffects)

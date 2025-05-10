@@ -27,7 +27,6 @@ devtools::load_all(".")
 Library setup
 
 ```{r setup}
-library(MSstatsTMT)
 library(scam)
 library(mgcv)
 library(marginaleffects)

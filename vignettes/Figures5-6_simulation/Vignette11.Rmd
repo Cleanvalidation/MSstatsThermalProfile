@@ -15,11 +15,10 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(MSstatsThermalProfiler)
+
 library(ggplot2)
 library(tidyr)
-library(MSstats)
-library(MSstatsTMT)
+
 ```
 
 #A. Load in MSstatsTMT processed data

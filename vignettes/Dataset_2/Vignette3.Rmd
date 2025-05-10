@@ -22,7 +22,6 @@ devtools::load_all(".")
 Library setup
 
 ```{r setup}
-library(MSstatsThermalProfiler)
 library(scam)
 library(mgcv)
 library(marginaleffects)

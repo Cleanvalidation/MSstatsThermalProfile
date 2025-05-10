@@ -15,10 +15,6 @@ comment = "#>"
 ```
 
 ```{r setup}
-library(MSstatsThermalProfiler)
-library(MSstats)
-library(MSstatsConvert)
-library(MSstatsTMT)
 library(tidyr)
 library(stringr)
 library(TPP)
