@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 plotMethods<-function(target_protein,labels=NA,processing="",temps=c("53.8","57.1","60.4"),fit="Spline"){
+
   #since the MSstats protein summarization output does not have the temperature data, we need to perform an inner join to add this
   target_protein$treatment<-stringr::str_extract(stringr::str_to_lower(target_protein$treatment),"[[:lower:]]+")
   target_protein$treatment<-ifelse(stringr::str_detect(target_protein$treatment,"ehicle"),"vehicle","treated")

@@ -1,3 +1,6 @@
+#' @importFrom stringr str_extract
+
+
 plot_benchmarks_MSstatsTMT<-function(result,design="TPP",shifter="Non"){
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")

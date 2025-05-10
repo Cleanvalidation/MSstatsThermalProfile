@@ -1,3 +1,6 @@
+#' @importFrom stringr str_extract
+
+
 plot_benchmarks_TN<-function(data,resultTPP,resultNPARC,resultSCAM,resultMSstatsTMT){
   resultMSstatsTMT$ComparisonResult<-resultMSstatsTMT$ComparisonResult|>dplyr::mutate(ICC=NA)
   resultMSstatsTMT$ComparisonResult$ICC<-stringr::str_extract(resultMSstatsTMT$ComparisonResult$Protein,"icc_[:digit:].[[:digit:]]+")

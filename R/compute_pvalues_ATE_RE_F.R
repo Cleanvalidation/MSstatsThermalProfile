@@ -1,5 +1,8 @@
 #Compute p-values from ATE using SCAM with RE
+#' @importFrom stringr str_extract
+
 compute_pvalues_ATE_RE_F = function(proteins,workers=6){
+
   if(any(names(proteins)=="Protein")){
   }
   if(any(names(proteins)=="Condition")&!any(names(proteins)=="treatment")){

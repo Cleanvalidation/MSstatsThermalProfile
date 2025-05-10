@@ -1,3 +1,6 @@
+#' @importFrom stringr str_extract
+
+
 Converter_MSstats_Format_to_TPP<-function(x,CARRIER=FALSE){
   if(any(isTRUE(class(x)))=="list"&any(stringr::str_detect(names(x),"TPPdata"))){
     x<-x$TPPdata

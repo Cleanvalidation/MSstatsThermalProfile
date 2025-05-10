@@ -1,3 +1,6 @@
+#' @importFrom stringr str_extract
+
+
 plot_benchmarksTPP<-function(result,temps=unique(result$temperature),shifter="strong",design="TPP"){
   #QC plot of the simulation with 5 icc values
   #define an icc column based on the protein ID

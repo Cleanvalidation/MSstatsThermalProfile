@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 make_contrast_matrix = function(data,temps=NA){
+
   if(!any(names(data$ProteinLevelData)=="temperature")){
     stop("No temperature column detected, please add a temperature column")
   }

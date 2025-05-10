@@ -1,4 +1,7 @@
+
 #normalizes data from the MSstats_TO_TPP output, disables FC filters
+#' @importFrom stringr str_extract
+
 TPPnorm_rename<-function(input,df.temps=Channel2Temps_HumanData,filters=FALSE){
 
   tpptrInput<-input

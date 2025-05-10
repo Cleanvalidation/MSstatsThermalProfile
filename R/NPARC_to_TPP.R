@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 NPARC_to_TPP<-function(x,temps=df.temps,string=FALSE,NORM=FALSE,TPPnormfilters=FALSE){#rename script data to run TPP
+
   if(any(names(x)=="Accession")&!any(names(x)=="uniqueID")){
     x$uniqueID<-x$Accession
   }

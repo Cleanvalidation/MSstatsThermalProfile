@@ -1,3 +1,5 @@
+#' @importFrom stringr str_extract
+
 norm_exp_data_sigmoid<-function(x){
   df1<-Human_O00267|>dplyr::mutate(Protein=Accession)
   df1$shape<-as.factor(ifelse(df1$temperature==min(df1$temperature,na.rm=T),"reference","included"))

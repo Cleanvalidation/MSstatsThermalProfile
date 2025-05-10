@@ -1,4 +1,7 @@
+
 #Run NPARC implementation F test from TPP package
+#' @importFrom stringr str_extract
+
 runTPP_splineFtest<-function(normData,DF=5,models=FALSE){
   normData$TPPdata<-purrr::map(normData$TPPdata,function(x) x |> as.data.frame())
   tpptrData<-TPP::tpptrImport(configTable = normData$TPPconfig,data=normData$TPPdata)

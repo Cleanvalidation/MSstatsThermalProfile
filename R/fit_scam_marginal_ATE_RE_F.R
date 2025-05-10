@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 fit_scam_marginal_ATE_RE_F= function(accession_data){
+
   if(any(names(accession_data)=="Mixture")&any(names(accession_data)=="sample_name")){
     if(!any(names(accession_data)=="treatment")&any(names(accession_data)=="Condition")){
       accession_data$Condition<-accession_data$treatment<-factor(stringr::str_extract(stringr::str_to_lower(accession_data$treatment),"[[:lower:]]+"),levels=c("vehicle","treated"))

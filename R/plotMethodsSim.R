@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 plotMethodsSim<-function(df,labels=NA,processing="",temps=c("53.8","57.1","60.4")){
+
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")
   }

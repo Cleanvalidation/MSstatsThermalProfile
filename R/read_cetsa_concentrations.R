@@ -9,7 +9,7 @@
 #' @importFrom readxl read_excel
 #' @import dplyr
 #' @importFrom tidyr gather
-#' @importFrom stringr stringr::str_extract
+#' @importFrom stringr str_extract
 #' @export
 #'
 #'

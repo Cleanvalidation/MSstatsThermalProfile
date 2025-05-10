@@ -1,4 +1,7 @@
 #prepares MSstats groupComparisons output to TPP
+#' @importFrom stringr str_extract
+
+
 MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
   if(!any(names(summarisedProteins)=="treatment")&!any(names(summarisedProteins)=="TechRepMixture")){
     summarisedProteins$treatment<-stringr::str_extract(summarisedProteins$Condition,'[[:lower:]]+')

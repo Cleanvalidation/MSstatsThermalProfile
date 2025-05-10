@@ -1,4 +1,7 @@
+#' @importFrom stringr str_extract
+
 Annotation2MSstatsTMT<-function(input,solvent="DMSO",temps,reference,CARRIER){
+
 
   if(any(stringr::str_detect(names(input)," "))){
     names(input)<-stringr::str_replace_all(names(input)," ",".")

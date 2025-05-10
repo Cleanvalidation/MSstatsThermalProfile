@@ -1,5 +1,8 @@
 #convert MSstats output to fit scam models
+#' @importFrom stringr str_extract
+
 MSstatstoSCAM<-function(Result){
+
   if(any(names(Result)=="Condition")&!any(names(Result)=="treatment")){
     Result$treatment<-as.factor(Result$Condition)
   }

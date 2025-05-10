@@ -1,4 +1,6 @@
-AnnotationtoMSstatsTMT<-function(input,solvent="DMSO",temps){
+#' @importFrom stringr str_extract
+
+PSMtoMSstatsTMT<-function(input,solvent="DMSO",temps){
   #pivot_longer
   input_long<-input %>%
     tidyr::pivot_longer(.,cols=names(input)[stringr::str_detect(names(input),"126|[[:digit:]]+N|[[:digit:]]+C")],

@@ -1,3 +1,5 @@
+#' @importFrom stringr str_extract
+
 TPP_normalization<-function(pd_protein_data,TPPfilters,temps,reference,CARRIER=FALSE){
   if(any(names(pd_protein_data)=="Abundance")){
     pd_protein_data$value<-pd_protein_data$Abundance

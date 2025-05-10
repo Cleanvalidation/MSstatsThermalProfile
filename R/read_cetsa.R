@@ -9,10 +9,12 @@
 #' @importFrom readxl read_excel
 #' @import dplyr
 #' @importFrom tidyr gather
-#' @importFrom stringr stringr::str_extract
+#' @importFrom stringr str_extract
 #' @export
 #'
 read_cetsa <- function(protein_path,peptide_path,Frac=TRUE,temps=set_temps(11,c(37,41, 44,47,50,53,56,59,63,67,68)),solvent="DMSO",CARRIER=TRUE){
+
+
   file.list<-protein_path
   i=1
   peptide_path<-as.character(peptide_path)

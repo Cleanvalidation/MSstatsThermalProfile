@@ -1,3 +1,5 @@
+#' @importFrom stringr str_extract
+
 replicate_labels<-function(x){
   if(any(names(x)=="Spectrum.File")&any(stringr::str_detect(x$Spectrum.File,"[:upper:][:digit:]+|[:lower:][[:digit:]]+"))){
     if(any(stringr::str_detect(x$Spectrum.File,"[:upper:][:digit:]+|[:lower:][[:digit:]]+"))){

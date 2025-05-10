@@ -1,3 +1,6 @@
+#' @importFrom stringr str_extract
+
+
 add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_var,t_range,design="TPP"){
   n_temps<-length(t_range)
   #Define subjects per condition

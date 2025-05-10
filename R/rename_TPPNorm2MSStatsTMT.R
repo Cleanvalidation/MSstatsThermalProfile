@@ -1,4 +1,6 @@
 #normTPP is the output from the tpptrNormalize function.  This function converts the Bioexprs objects to data frames
+#' @importFrom stringr str_extract
+
 rename_TPPNorm2MSStatsTMT<-function(normTPP){
   vault<-purrr::map(normTPP,function(x) Biobase::exprs(x))
   vault_names<-purrr::map2(vault,as.list(names(vault)),function(x,y)as.data.frame(x) %>%
