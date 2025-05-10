@@ -18,6 +18,28 @@ Imports:
     forcats,
     future,
     ggplot2,
+    readxl,
+    stringr,
+    tidyr
+Depends: 
+    R (>= 2.10)
+LazyData: true
+Suggests: 
+    readxl,
+    stringr,
+    knitr,
+    posterior,
+    rmarkdown,
+    rstan,
+    testthat (>= 3.0.0),
+    TPP,
+    MSstatsTMT,
+    NPARC,
+    scam,
+    stats,
+    tidylog,
+    tidyr,
+    marginaleffects,
     ggrepel,
     ggvenn,
     lme4,
@@ -26,25 +48,8 @@ Imports:
     nlme,
     purrr,
     rlang,
-    R.utils,
-    scam,
-    stats,
-    tidylog,
-    tidyr,
-    marginaleffects,
-    survival
-Depends: 
-    R (>= 2.10)
-LazyData: true
-Suggests: 
-    knitr,
-    posterior,
-    rmarkdown,
-    rstan,
-    testthat (>= 3.0.0),
-    TPP,
-    MSstatsTMT,
-    NPARC
+    survival,
+    R.utils
 Remotes:
     github::CleanValidation/MSstatsThermalProfiler
 VignetteBuilder: knitr
