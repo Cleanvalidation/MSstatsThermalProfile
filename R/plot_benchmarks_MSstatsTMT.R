@@ -1,4 +1,14 @@
 plot_benchmarks_MSstatsTMT<-function(result,design="TPP",shifter="Non"){
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
+
   #QC plot of the simulation with 5 icc values
   #set temperature
   temps<-as.numeric(unique(result$temperature))

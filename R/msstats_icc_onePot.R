@@ -1,4 +1,13 @@
 msstats_icc_onePot<-function(summarised.proteins,contrast.matrix){
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
 
   #define the contrast matrix
   comparison<-contrast.matrix

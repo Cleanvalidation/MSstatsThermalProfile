@@ -1,4 +1,14 @@
 plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_range=seq(1,10), n_replicates_per_plex=10){
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
+
   #QC plot of the simulation with 5 icc values
   #define an icc column based on the protein ID
   result$ICC<-stringr::str_extract(result$Protein,"icc_[:digit:].[[:digit:]]+")

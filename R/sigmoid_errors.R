@@ -1,4 +1,13 @@
 sigmoid_errors=function(proteinDF,proteinName,cond="vehicle",n_protein){
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
 
   all=proteinDF|>dplyr::group_by(Protein)
   # Define the sigmoid model

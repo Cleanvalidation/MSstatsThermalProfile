@@ -1,4 +1,15 @@
 benchmark_nonshifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="TPP"){
+
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
+
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   all_proteins<-msstats_icc_output$df_with_variance

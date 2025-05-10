@@ -1,4 +1,13 @@
 plotMethodsSim<-function(df,labels=NA,processing="",temps=c("53.8","57.1","60.4")){
+  if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
+    stop("The MSstatsTMT package is required but not installed.")
+  }
+  if (!requireNamespace("MSstats", quietly = TRUE)) {
+    stop("The MSstats package is required but not installed.")
+  }
+  if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
+    stop("The MSstatsConvert package is required but not installed.")
+  }
 
   if(!length(unique(df$Condition))==2){
     df$Condition<-stringr::str_extract(stringr::str_extract_all(stringr::str_to_lower(df$Condition),"_[[:lower:]]+"),"[[:lower:]]+")
