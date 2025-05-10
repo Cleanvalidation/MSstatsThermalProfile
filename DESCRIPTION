@@ -29,7 +29,6 @@ Suggests:
     MSstatsTMT,
     MSstatsConvert,
     readxl,
-    stringr,
     knitr,
     posterior,
     rmarkdown,
