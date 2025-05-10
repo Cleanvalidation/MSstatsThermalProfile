@@ -33,7 +33,6 @@ Suggests:
     rstan,
     testthat (>= 3.0.0),
     TPP,
-    MSstatsTMT,
     NPARC,
     scam,
     stats,

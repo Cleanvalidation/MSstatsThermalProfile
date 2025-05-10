@@ -20,6 +20,7 @@ devtools::install_github("CleanValidation/MSstatsThermalProfile")
 ```r
 if (!requireNamespace("MSstats", quietly = TRUE)) {
     BiocManager::install("MSstats")
+    BiocManager::install("MSstatsTMT")
 }
 
 ### Windows users
