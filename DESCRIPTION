@@ -25,6 +25,10 @@ Depends:
     R (>= 2.10)
 LazyData: true
 Suggests: 
+    MSstats,
+    MSstatsTMT,
+    MSstats,
+    MSstatsConvert,
     readxl,
     stringr,
     knitr,
