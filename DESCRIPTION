@@ -25,7 +25,6 @@ Depends:
     R (>= 2.10)
 LazyData: true
 Suggests: 
-    MSstats,
     readxl,
     stringr,
     knitr,
@@ -50,7 +49,5 @@ Suggests:
     rlang,
     survival,
     R.utils
-Remotes:
-    github::CleanValidation/MSstatsThermalProfiler
 VignetteBuilder: knitr
 Config/testthat/edition: 3

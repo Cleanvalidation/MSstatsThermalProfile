@@ -5,6 +5,7 @@
 #Please use this repository as it contains the most recent work to date.
 # Install from GitHub
 # install.packages("devtools")
+```r
 devtools::install_github("CleanValidation/MSstatsThermalProfile")
 
 
@@ -20,6 +21,7 @@ devtools::install_github("CleanValidation/MSstatsThermalProfile")
 ```r
 if (!requireNamespace("MSstats", quietly = TRUE)) {
     BiocManager::install("MSstats")
+    BiocManager::install("MSstatsConvert")
     BiocManager::install("MSstatsTMT")
 }
 
