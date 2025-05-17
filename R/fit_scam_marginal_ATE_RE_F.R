@@ -1,4 +1,10 @@
-#' @importFrom stringr str_extract
+#'
+#' fit_scam_marginal_ATE_RE_F
+#'
+#'@description Fits Shape constrained additive models to calculate average treatment effect
+#'@importFrom stringr str_extract
+#'@importFrom marginaleffects comparison
+
 
 fit_scam_marginal_ATE_RE_F= function(accession_data){
 
