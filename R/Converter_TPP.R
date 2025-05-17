@@ -8,9 +8,10 @@ Converter_TPP<-function(x,CARRIER=FALSE){
     temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$temp_ref)))
   }
   if(isTRUE(CARRIER)&any(names(x)=="Channel")){
+    x$Channel<-as.character(x$Channel)
     x$Channel<-ifelse(stringr::str_detect(x$Channel,"131N"),"131",x$Channel)
     x<-x|>dplyr::filter(Channel!="131C")
-    }
+  }
   #Original data
   if(!any(names(x)=="sample_id")&any(names(x)=="Subject")){
     x$sample_id<-x$Subject
