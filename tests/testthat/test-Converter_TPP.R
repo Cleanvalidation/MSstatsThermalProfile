@@ -33,5 +33,5 @@ test_that("Converter works", {
                                                           remove_norm_channel=FALSE)
   temps<-set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67))
   x<-Converter_TPP(summarised.proteins$ProteinLevelData,CARRIER=TRUE)
-  expect_length(x,15)
+  expect_length(x,16)
 })
