@@ -1,6 +1,6 @@
 test_that("Sigmoid Simulation Correct", {
   set.seed(101)
-  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8,rho=0)
+  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8)
   true_params = sim$sample_params
   simdata = sim$simdata
 
