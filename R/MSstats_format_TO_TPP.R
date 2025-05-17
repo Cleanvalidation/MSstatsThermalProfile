@@ -12,8 +12,23 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
     if(!any(names(summarisedProteins)=="Experiment")){
       summarisedProteins<- summarisedProteins |> dplyr::right_join(labels) |>
         dplyr::mutate(Experiment = paste0(treatment,"_",TechRepMixture))
-    }else{
-      summarisedProteins <- summarisedProteins |>dplyr::right_join(labels)
+    }
+    if (any(names(summarisedProteins == "Condition"))){
+      labels<-summarisedProteins|>dplyr::filter(!Condition=="Norm")
+      labels<-labels|>
+        dplyr::select(Condition,Mixture)|>
+        dplyr::filter(!is.na(Condition))|>
+        dplyr::distinct()|>
+        dplyr::group_by(Condition)|>
+        dplyr::mutate(TechRepMixture=as.factor(seq(1,dplyr::n())),
+                      treatment=stringr::str_extract(Condition,"(?<=_)[[:lower:]]+"),
+                      Condition = ifelse(treatment == "treated","treatment","vehicle"),
+                      Experiment = paste0(Condition,"_",TechRepMixture))|>
+        dplyr::distinct()
+      summarisedProteins <- summarisedProteins |>
+        dplyr::select(-Condition)|>
+        dplyr::right_join(labels)|>
+        dplyr::mutate(Condition = Experiment)
     }
   }
   #rename protein columns into one format

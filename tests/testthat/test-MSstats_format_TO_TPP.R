@@ -34,5 +34,8 @@ test_that("MSstats to TPP converter works", {
                                                           remove_norm_channel=FALSE)
   temps<-set_temps(10,c(37.3, 40.6, 43.9, 47.2, 50.5, 53.8, 57.1, 60.4, 64, 67))
   TPP<-MSstats_format_TO_TPP(summarised.proteins$ProteinLevelData,temps=temps,CARRIER=TRUE)
-  expect_equal(stringr::str_to_lower(names(TPP$TPPdata)),c("treatment_1","treatment_2","vehicle_1","vehicle_2"))
+  print(names(TPP$TPPdata))  # Debug print
+  expect_equal(stringr::str_to_lower(names(TPP$TPPdata)), c("treatment_1","treatment_2","vehicle_1","vehicle_2"))
+
+
 })
