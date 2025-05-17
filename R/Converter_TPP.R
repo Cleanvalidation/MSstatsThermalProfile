@@ -11,6 +11,7 @@ Converter_TPP<-function(x,CARRIER=FALSE){
     x$Channel<-as.character(x$Channel)
     x$Channel<-ifelse(stringr::str_detect(x$Channel,"131N"),"131",x$Channel)
     x<-x|>dplyr::filter(Channel!="131C")
+    x$Channel<-as.factor(x$Channel)
   }
   #Original data
   if(!any(names(x)=="sample_id")&any(names(x)=="Subject")){
