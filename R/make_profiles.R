@@ -77,7 +77,7 @@ make_profiles<-function(dataList,n_protein,s_Var,r_Var){
   temps<-dataList|>dplyr::select(temperature,Channel)|>dplyr::distinct()
 
   for(z in seq(s_Var)){
-    Sims<-purrr::map2(fitted_list,fitted_listnames,function(x,y)add_variation_shift(x,icc = s_Var[z],re_var=r_Var,t_range = temps$temperature)|>
+    Sims<-purrr::map2(fitted_list,fitted_listnames,function(x,y)add_variation_shift(x,icc = s_Var[z]/(r_Var+s_Var[z]),re_var=r_Var,t_range = temps$temperature)|>
                         dplyr::mutate(Protein=y$uniqueID,uniqueID=y$uniqueID,bio_var = s_Var[z],re_var=r_Var,icc=s_Var[z]/(r_Var+s_Var[z])))
   }
   Sims<-dplyr::bind_rows(Sims)|>dplyr::inner_join(temps)
