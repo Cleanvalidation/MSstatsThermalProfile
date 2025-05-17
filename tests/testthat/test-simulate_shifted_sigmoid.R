@@ -1,6 +1,6 @@
 test_that("Shifted Sigmoid Simulation Correct", {
   set.seed(101)
-  sim = simulate_shifted_sigmoid(n=2000,error_sd=1e-8,rho=0)
+  sim = simulate_shifted_sigmoid(n=2000,error_sd=1e-8)
   true_params = sim$sample_params
 
   simdata_treated = sim$simdata |> dplyr::filter(Condition=="treated")
@@ -29,7 +29,7 @@ test_that("Shifted Sigmoid Simulation Correct", {
 test_that("Shifted Sigmoid Simulation Residual Corr Correct", {
   set.seed(101)
 
-  sim = simulate_shifted_sigmoid(n=4000,error_sd=1e-8,rho=0.9)
+  sim = simulate_shifted_sigmoid(n=4000,error_sd=1e-8)
   true_params = sim$sample_params
   simdata = sim$simdata
 

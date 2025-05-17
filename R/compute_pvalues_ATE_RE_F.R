@@ -24,7 +24,7 @@ compute_pvalues_ATE_RE_F = function(proteins,workers=6){
   original_result = fit_scam_marginal_ATE_RE_F(proteins) |> dplyr::bind_rows()
   original_result$F_adjBH=stats::p.adjust(original_result$F_pvalue,method="BH")
   original_result$ATE_padjBH=stats::p.adjust(original_result$p.value,method="BH")
-
+  original_result$Accession = original_result$Protein
   #original_result$dTm<-original_result$Tm_treatment-original_result$Tm_vehicle
   return(original_result)
 }
