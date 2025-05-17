@@ -8,6 +8,9 @@ fit_scam_marginal_ATE_RE_F= function(accession_data){
     }else if(any(stringr::str_detect(accession_data$treatment[1],"_"))){
       accession_data$Condition<-accession_data$treatment<-factor(stringr::str_extract(stringr::str_to_lower(accession_data$treatment),"[[:lower:]]+"),levels=c("vehicle","treated"))
     }
+    if(!any(names(accession_data)=="Protein")){
+      accession_data$Accession<-accession_data$Protein
+    }
     accession_data<-accession_data |> dplyr::select(Accession,I,temperature,sample_name,treatment,sample_id,Condition)
     data_gdf_accession = accession_data |> dplyr::group_split(Accession,sample_name)
   }else{
