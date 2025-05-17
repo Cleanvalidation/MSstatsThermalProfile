@@ -1,4 +1,4 @@
-simulate_shifted_sigmoid = function(n=4,error_sd=0.05,subject_sd=0,half_temp_grid=FALSE){
+simulate_shifted_sigmoid = function(n=4,error_sd=0.05,subject_sd=0,half_temp_grid=FALSE,rho=rho){
   stopifnot(n%%2==0) #we restrict to balanced scenarios only
   temperature = c(37,41,44,47,50,53,56,59,63,67)
   NewChannel2Temps_HumanData = Channel2Temps_HumanData[Channel2Temps_HumanData$temperature %in% temperature,]
