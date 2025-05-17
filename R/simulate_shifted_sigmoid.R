@@ -43,7 +43,8 @@ simulate_shifted_sigmoid = function(n=4,error_sd=0.05,subject_sd=0,half_temp_gri
     dplyr::arrange(temperature)
 
   rho = subject_sd^2/(subject_sd^2 + error_sd^2)
-  sample_params = sample_params |> dplyr::select(p_Tmt,k_Tmt,m_Tmt,p_Ctrl,k_Ctrl,m_Ctrl,ATE) |> dplyr::mutate(sigma_e=error_sd,sigma_subject=subject_sd,rho=rho)
+  sample_params = sample_params |> dplyr::select(p_Tmt,k_Tmt,m_Tmt,p_Ctrl,k_Ctrl,m_Ctrl,ATE) |>
+    dplyr::mutate(sigma_e=error_sd,sigma_subject=subject_sd,rho=rho)
 
   return(list(simdata=simdata,sample_params=sample_params))
 }

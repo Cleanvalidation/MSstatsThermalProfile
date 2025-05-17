@@ -1,4 +1,4 @@
-
+# if the dat ais a simulation, make sure MSstatsTMT annotation file column names are present
 Sim2MSstatsTMT<-function(Sim,half_temp_grid=FALSE){
   if(any(names(Sim)=="ProteinLevelData")){
     Sim<-Sim$ProteinLevelData |> as.data.frame()

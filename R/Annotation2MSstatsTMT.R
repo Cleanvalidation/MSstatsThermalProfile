@@ -1,6 +1,6 @@
 #' @importFrom stringr str_extract
 
-Annotation2MSstatsTMT<-function(input,solvent="DMSO",temps,reference,CARRIER){
+Annotation2MSstatsTMT<-function(input,solvent="DMSO",temps,reference,CARRIER=TRUE){
 
 
   if(any(stringr::str_detect(names(input)," "))){
