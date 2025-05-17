@@ -1,6 +1,6 @@
 test_that("Sigmoid Simulation Correct", {
   set.seed(101)
-  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8,rho = 0.9)
+  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8)
   true_params = sim$sample_params
   simdata = sim$simdata
 
@@ -15,7 +15,7 @@ test_that("Sigmoid Simulation Correct", {
 test_that("Sigmoid Simulation Residual Corr Correct", {
   set.seed(101)
 
-  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8,rho = 0.9)
+  sim = simulate_null_sigmoid(n=1000,error_sd=1e-8,subject_sd = 3e-8)
   true_params = sim$sample_params
   simdata = sim$simdata
 
