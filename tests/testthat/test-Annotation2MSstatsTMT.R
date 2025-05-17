@@ -3,7 +3,7 @@ test_that("Annotation file function is ready for MSStatsTMT", {
   pd_annotation<-Annotation2MSstatsTMT(PSMsample_HumanData,solvent="DMSO",temps=Channel2Temps_HumanData,reference="126")
 
   processed.input <- MSstatsTMT::PDtoMSstatsTMTFormat(PSMsample_HumanData,
-                                                      pd_annotation,
+                                                      pd_annotation$annotation,
                                                       which.proteinid = "Master Protein Accessions",
                                                       useNumProteinsColumn = TRUE,
                                                       useUniquePeptide = FALSE,
