@@ -2,10 +2,14 @@ Converter_TPP<-function(x,CARRIER=FALSE){
   if(any(names(x)=="ProteinLevelData")){
     x<-x$ProteinLevelData
   }
+
   if(any(names(x)=="Channel")&any(names(x)=="temperature")){
     temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$Channel)))
   }else if(any(names(x)=="temp_ref")){
     temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$temp_ref)))
+  }else{
+    data("Channel2Temps_HumanData", package="MSstatsThermalProfiler")
+    temps<-Channel2Temps_HumanData
   }
   if(isTRUE(CARRIER)&any(names(x)=="Channel")){
     x$Channel<-as.character(x$Channel)
