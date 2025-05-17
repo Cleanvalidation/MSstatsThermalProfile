@@ -1,3 +1,4 @@
+#' @importFrom scam predict
 
 simulate_null_nonsigmoid = function(n=4,error_sd=0.05,subject_sd=0,half_temp_grid=FALSE){
   stopifnot(n%%2==0)
