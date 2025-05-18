@@ -28,7 +28,7 @@ make_profiles<-function(dataList,n_protein,s_Var,r_Var){
     if(!length(fitted_values$temperature)==20){
       temps<-data.frame(temperature=rep(as.character(unique(dataList$temperature)[1:10]),2))
       fitted_values$temperature<-as.character(fitted_values$temperature)
-      fitted_values<-fitted_values|>dplyr::right_join(temps)
+      fitted_values<-fitted_values|>dplyr::right_join(temps,relationship = "many-to-many")
       fitted_values$Abundance<-ifelse(fitted_values$temperature==min(unique(dataList$temperature),na.rm=T),1,fitted_values$Abundance)
     }
   }
@@ -37,7 +37,7 @@ make_profiles<-function(dataList,n_protein,s_Var,r_Var){
   df <- data.frame(temperature =rep(temps$temperature,4),
                    Condition=c(rep("Vehicle",20),rep("Treatment",each=20)))|>
     dplyr::group_by(temperature,Condition)|>
-    dplyr::inner_join(TechRepMixture)|>
+    dplyr::inner_join(TechRepMixture,relationship = "many-to-many")|>
     dplyr::ungroup()
 
   df$temperature<-as.character(df$temperature)
@@ -51,6 +51,7 @@ make_profiles<-function(dataList,n_protein,s_Var,r_Var){
 
   df1<-purrr::map2(df,fitted_values,function(x,y){
     z<-x|>dplyr::left_join(y,by="temperature")|>
+      na.omit()|>
       dplyr::distinct()|>
       dplyr::mutate(Abundance=ifelse(is.na(Abundance),1,Abundance))|>
       dplyr::distinct()|>
