@@ -2,6 +2,7 @@
 
 
 add_variation_shift<-function(template,icc,n_conditions,n_replicates,re_var,t_range,design="TPP"){
+
   n_temps<-length(t_range)
   #Define subjects per condition
   if(n_temps==1){
