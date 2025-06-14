@@ -27,6 +27,7 @@ library(future)
 library(ggplot2)
 library(forcats)
 library(cowplot)
+theme_set(theme_bw())
 
 plan(multicore,workers=future::availableCores()-2)
 options(future.globals.maxSize = 8000 * 1024^2)
@@ -64,12 +65,11 @@ TPP40<-hist(TPP_F_trueneg_results$pNPARC[stringr::str_detect(TPP_F_trueneg_resul
 Implement a sigmoidal function for true negatives
 
 ```{r}
-NPARC_fits_TN <-NPARC::NPARCfit(x = Sims_TN$temperature,
-                 y =Sims_TN$Abundance,
-                 id =Sims_TN$Protein,
+NPARC_fits_TN <-NPARC::NPARCfit(x = truenegatives$temperature,
+                 y =truenegatives$Abundance,
+                 id =truenegatives$Protein,
                  groupsNull = NULL,
-                 groupsAlt = as.character(Sims_TN$Condition),
-                 BPPARAM=BPPARAM,
+                 groupsAlt = as.character(truenegatives$Condition),
                  returnModels = TRUE)
 ```
 
