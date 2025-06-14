@@ -4,12 +4,16 @@ Converter_TPP<-function(x,CARRIER=TRUE){
   }
 
   if(any(names(x)=="Channel")&any(names(x)=="temperature")){
-    temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$Channel)))
+    temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$Channel)))|>
+      dplyr::mutate(Channel = ifelse(stringr::str_detect(Channel,"131N"),"131",Channel))
   }else if(any(names(x)=="temp_ref")){
-    temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$temp_ref)))
+    temps<-data.frame(temperature=as.character(unique(x$temperature)),Channel=as.character(unique(x$temp_ref)))|>
+      dplyr::mutate(Channel = ifelse(stringr::str_detect(Channel,"131N"),"131",Channel))
   }else{
     data("Channel2Temps_HumanData", package="MSstatsThermalProfiler")
-    temps<-Channel2Temps_HumanData
+    temps<-Channel2Temps_HumanData|>
+      dplyr::mutate(Channel = ifelse(stringr::str_detect(Channel,"131N"),"131",Channel))|>
+      dplyr::filter(temperature!=68)
   }
   if(isTRUE(CARRIER)&any(names(x)=="Channel")){
     x$Channel<-as.character(x$Channel)
