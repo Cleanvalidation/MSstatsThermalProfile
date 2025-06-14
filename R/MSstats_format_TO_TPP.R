@@ -21,7 +21,7 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
       dplyr::distinct()|>
       dplyr::group_by(Condition)|>
       dplyr::mutate(TechRepMixture=as.factor(seq(1,dplyr::n())),
-                    treatment=stringr::str_extract(Condition,"(?<=_)[[:lower:]]+"),
+                    treatment=stringr::str_extract(as.character(Condition),"(?<=_)[[:lower:]]+|[[:lower:]]+"),
                     Condition = ifelse(treatment == "treated","treatment","vehicle"),
                     Experiment = paste0(Condition,"_",TechRepMixture))|>
       dplyr::distinct()
@@ -70,7 +70,10 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
   Orig_data$Channel<-ifelse(stringr::str_detect(Orig_data$Channel,"N"),
                             stringr::str_replace(Orig_data$Channel,"N","L"),
                             Orig_data$Channel)
-  Orig_data<-Orig_data |>dplyr::mutate(sample_id=as.character(sample_id))|>dplyr::distinct()
+  Orig_data<-Orig_data |>
+    dplyr::mutate(sample_id=as.character(sample_id))|>
+    dplyr::filter(!is.na(Channel))|>
+    dplyr::distinct()
 
   #pivot original data to wide and preface rel_fc to channels
 
@@ -110,7 +113,9 @@ MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
 
 
   #generate the configuration file from the original data
-  config<-x |> dplyr::select(uniqueID,gene_name,Experiment,Condition,sample_id,TechRepMixture)|>dplyr::distinct()
+  config<-x |>
+    dplyr::select(uniqueID,gene_name,Experiment,Condition,sample_id,TechRepMixture)|>
+    dplyr::distinct()
 
 
   #join pivot data
