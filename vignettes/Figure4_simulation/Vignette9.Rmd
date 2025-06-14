@@ -43,8 +43,8 @@ truenegatives<-truenegatives$ProteinLevelData|>dplyr::mutate(Accession=Protein,
 #B. TPP splines statistical model
 ```{r}
 start=proc.time()
-TPP_F_trueneg_results = TPP_NPARC_calc(Sims_TN,method="NPARC",DF=5,temps=set_temps(10,unique(Sims_TN$temperature)),
-                                        CARRIER=TRUE,returnModels=TRUE,filters=FALSE,NORM = FALSE)
+TPP_F_trueneg_results = TPP_NPARC_calc(truenegatives,method="NPARC",DF=5,temps=set_temps(10,unique(truenegatives$temperature)),
+                                        CARRIER=FALSE,returnModels=TRUE,filters=FALSE,NORM = FALSE)
 end=proc.time()
 print(end-start)
 ```
