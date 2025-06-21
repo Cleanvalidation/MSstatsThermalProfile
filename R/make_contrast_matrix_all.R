@@ -15,7 +15,7 @@ make_contrast_matrix_all = function(data,temps=NA){
   # }
 
   contrasts<-choose_temps(data$ProteinLevelData,temps=unique(data$ProteinLevelData$temperature))
-  if(!is.na(any(temps))){
+  if(is.na(any(temps))){
     condition_levels<-contrasts|>dplyr::select(temperature,Condition,Mixture)|>
       unique()
   }else{
