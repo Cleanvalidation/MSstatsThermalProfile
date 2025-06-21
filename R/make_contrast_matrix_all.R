@@ -30,13 +30,21 @@ make_contrast_matrix_all = function(data,temps=NA){
   null_contrasts<-data.frame(Condition=unique(data$ProteinLevelData$Condition),
                              ATE=rep(0,nrow(data$ProteinLevelData|>
                                               dplyr::select(temperature,Condition)|>
-                                              unique())))|>
+                                              unique())),
+                             temperature=unique(data$ProteinLevelData$temperature))|>
     dplyr::distinct()
-
+  if(!is.na(any(temps))){
+    contrast<-condition_levels|>dplyr::filter(temperature %in% temps)
+    ATE=null_contrasts|>dplyr::mutate(ATE=ifelse(temperature %in% temps,
+                                                 2/length(unique(contrast$Condition))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
+                                                                                                             ,"vehicle"),-1,1),
+                                                 ATE))|>dplyr::select(ATE)
+  }else{
   ATE=null_contrasts|>dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
                                                2/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
                                                                                                    ,"vehicle"),-1,1),
                                                ATE))|>dplyr::select(ATE)
+  }
   #Treated - Vehicle
   #levels_Condition = unique(data$ProteinLevelData$Group)
 
