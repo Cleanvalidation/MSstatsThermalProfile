@@ -13,16 +13,25 @@ make_contrast_matrix_all = function(data,temps=NA){
   #
   #   stop("Remove Reference Channel 131C")
   # }
+
   contrasts<-choose_temps(data$ProteinLevelData,temps=unique(data$ProteinLevelData$temperature))
-  if(!is.na(temps)){
+  if(!is.na(any(temps))){
     condition_levels<-contrasts|>dplyr::select(temperature,Condition,Mixture)|>
       unique()
   }else{
-    condition_levels<-contrasts|>dplyr::select(temperature,Condition)|>unique()
+    temps<-as.character(temps)
+    condition_levels<-contrasts|>
+      dplyr::select(temperature,Condition)|>
+      dplyr::mutate(temperature=as.character(temperature))|>
+      dplyr::filter(temperature %in% temps)|>
+      unique()
   }
   #Channel 127C => Temp=44, Channel 130C =>Temp = 63
-  null_contrasts<-data.frame(Condition=unique(condition_levels$Condition),
-                             ATE=rep(0,nrow(data$ProteinLevelData|>dplyr::select(temperature,Condition)|>unique())))|>dplyr::distinct()
+  null_contrasts<-data.frame(Condition=unique(data$ProteinLevelData$Condition),
+                             ATE=rep(0,nrow(data$ProteinLevelData|>
+                                              dplyr::select(temperature,Condition)|>
+                                              unique())))|>
+    dplyr::distinct()
 
   ATE=null_contrasts|>dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
                                                2/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)

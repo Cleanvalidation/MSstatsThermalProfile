@@ -41,6 +41,21 @@ truenegatives<-truenegatives$ProteinLevelData|>dplyr::mutate(Accession=Protein,
                                             treatment=Condition,
                                             Mixture=Subject)
 ```
+### Or you can simulate null model that follows a sigmoid function with various instances of biological variance
+```{r}
+subject_biovar <- c(0.05,0.1,0.2,0.3,0.4)
+
+truenegatives<-purrr::map(subject_biovar, function(x) simulate_multiple_null_sigmoids(n=4, error_sd = 0.05, subject_sd = x)$simdata)|>
+  dplyr::bind_rows()
+
+truenegatives<-truenegatives|>
+  dplyr::group_by(Group)|>
+  dplyr::mutate(Group = as.factor(Group),
+                treatment = stringr::str_extract(Group,"[[:lower:]]+"),
+                Mixture = Subject)|>
+  dplyr::ungroup()
+
+```
 #B. TPP splines statistical model
 ```{r}
 start=proc.time()
@@ -53,13 +68,30 @@ print(end-start)
 ###the null distribution of p-values for TPP splines for 5% biological variance
 
 ```{r}
-TPP5<-hist(TPP_F_trueneg_results$pNPARC[stringr::str_detect(TPP_F_trueneg_results$Protein,"_0.05")],breaks=20,xlab = "p-values",col="#D95F0E",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 5")
+TPP5<-ggplot(
+  TPP_F_trueneg_results |> filter(stringr::str_detect(Protein, "0.05"))|>dplyr::mutate(BioVar= "% of biovar = 5"),
+  aes(x = pNPARC)
+) +
+  geom_histogram(bins = 40, fill = "#D95F0E",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+ggtitle("TPP stat. model")+
+  facet_wrap(~BioVar)+ylim(0,2000)
+  
+TPP5
 ```
 ###the null distribution of p-values for TPP splines for 40% biological variance
 
 ```{r}
-TPP40<-hist(TPP_F_trueneg_results$pNPARC[stringr::str_detect(TPP_F_trueneg_results$Protein,".4")],breaks=20,xlab = "p-values",col="#D95F0E",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 40")
+TPP40<-ggplot(
+  TPP_F_trueneg_results |> filter(stringr::str_detect(Protein, "0.4"))|>dplyr::mutate(BioVar= "% of biovar = 40"),
+  aes(x = pNPARC)
+) +
+  geom_histogram(bins = 40, fill = "#D95F0E",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+facet_wrap(~BioVar)+ylim(0,2000)
+  
+
+TPP40
 ```
+  
 #C. NPARC statistical model
 
 Implement a sigmoidal function for true negatives
@@ -78,14 +110,14 @@ NPARC_fits_TN <-NPARC::NPARCfit(x = truenegatives$temperature,
 ```{r}
 NPARC_test_theo_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="theoretical")
 
-NPARC<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,"0.05")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="% of biovar = 5")
+NPARC5<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,"0.05")],breaks=40,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="NPARC stat. model")
 ```
 ###NPARC theoretical F-test for 40% biological variance
 
 ```{r}
 NPARC_test_theo_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="theoretical")
 
-NPARC<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,".4")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="% of biovar = 40")
+NPARC40<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,".4")],breaks=40,xlab = "p-values",col="#FEC44F",cex.lab = 2,cex.axis=2,main="")
 ```
 
 ### NPARC empirical F-test for 5% biological variance
@@ -94,7 +126,14 @@ NPARC<-hist(NPARC_test_theo_TN$pVal[stringr::str_detect(NPARC_test_theo_TN$id,".
 
 NPARC_test_emp_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="empirical")
 
-hist(NPARC_test_emp_TN$pVal[stringr::str_detect(NPARC_test_emp_TN$id,"0.05")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 1.5,cex.axis=1.5,main="% of bio var = 5")
+NPARC_5_emp<-ggplot(
+  NPARC_test_emp_TN |> filter(stringr::str_detect(id, "0.05"))|>dplyr::mutate(BioVar= "% of biovar = 5"),
+  aes(x = pVal)
+) +
+  geom_histogram(bins = 40, fill = "#FEC44F",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+ggtitle("NPARC stat. model")+facet_wrap(~BioVar)+ylim(0,80)
+
+NPARC_5_emp
 ```
 
 
@@ -104,29 +143,57 @@ hist(NPARC_test_emp_TN$pVal[stringr::str_detect(NPARC_test_emp_TN$id,"0.05")],br
 
 NPARC_test_emp_TN<-NPARC::NPARCtest(NPARC_fits_TN$metrics,dfType="empirical")
 
-hist(NPARC_test_emp_TN$pVal[stringr::str_detect(NPARC_test_emp_TN$id,".4")],breaks=20,xlab = "p-values",col="#FEC44F",cex.lab = 1.5,cex.axis=1.5,main="% of biovar = 40")
+NPARC40_emp<-ggplot(
+  NPARC_test_emp_TN |> filter(stringr::str_detect(id, "0.4"))|>dplyr::mutate(BioVar= "% of biovar = 40"),
+  aes(x = pVal)
+) +
+  geom_histogram(bins = 40, fill = "#FEC44F",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+facet_wrap(~BioVar)+ylim(0,80)
+
+NPARC40_emp
+
 ```
 
 
 #D. SCAM statistical modeling
 
 ```{r}
+#Add an accession column
+truenegatives <- truenegatives |> dplyr::mutate(Accession=Protein)
 start=proc.time()
 SCAM_pvals_TN = compute_pvalues_ATE_RE_F(truenegatives)
-end=proc.time()
+    end=proc.time()
 print(end-start)
 ```
 
 Then look at the null distribution of p-values
 
 ```{r}
-SCAM5<-hist(SCAM_pvals_TN$p.value[stringr::str_detect(SCAM_pvals_TN$Accession,"0.05")],20,col="#00FFFF",xlab="p-values",cex.lab = 2,cex.axis=2,main="% of biovar = 5")
+protein_names<-truenegatives|>dplyr::select(Accession)|>dplyr::distinct()
+
+SCAM_pvals_TN<-cbind(protein_names,SCAM_pvals_TN)
+
+SCAM5<-ggplot(
+  SCAM_pvals_TN |> filter(stringr::str_detect(Accession, "0.05"))|>dplyr::mutate(BioVar= "% of biovar = 5"),
+  aes(x = p.value)
+) +
+  geom_histogram(bins = 40, fill = "#00FFFF",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+ggtitle("SCAM stat. model")+facet_wrap(~BioVar)+ylim(0,80)
+SCAM5
+
 ```
 
 #Then look at the null distribution of p-values
 
 ```{r}
-SCAM40<-hist(SCAM_pvals_TN$p.value[stringr::str_detect(SCAM_pvals_TN$Accession,"0.4")],20,col="#00FFFF",xlab="p-values",cex.lab = 2,cex.axis=2,main="% of biovar = 40")
+SCAM40<-ggplot(
+  SCAM_pvals_TN |> filter(stringr::str_detect(Accession, "0.4"))|>dplyr::mutate(BioVar= "% of biovar = 40"),
+  aes(x = p.value)
+) +
+  geom_histogram(bins = 40, fill = "#00FFFF",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+facet_wrap(~BioVar)+ylim(0,80)
+
+SCAM40
 ```
 #E. MSstatsTMT processing
 ```{r} 
@@ -151,6 +218,8 @@ TN_compmat
 start=proc.time()
 MSstat_TNresult = MSstatsTMT::groupComparisonTMT(data=MSstat_TNdata,contrast.matrix=TN_compmat,remove_norm_channel = TRUE,
                                      moderated=FALSE,save_fitted_models = FALSE,use_log_file = FALSE)$ComparisonResult
+
+
 end=proc.time()
 print(end-start)
 
@@ -160,9 +229,32 @@ print(end-start)
 ### 5% biological variance
 
 ```{r}
-MSstat_5pctvar<-hist(MSstat_TNresult$pvalue[stringr::str_detect(MSstat_TNresult$Protein,"0.05")],18,col="#2C7FB8",xlab="p-values",cex.lab=1.5,cex.axis=2,main="% of biovar = 5")
+MSstat_5pctvar<-ggplot(
+  MSstat_TNresult |> filter(stringr::str_detect(Protein, "0.05"))|>dplyr::mutate(BioVar= "% of biovar = 5"),
+  aes(x = pvalue)
+) +
+  geom_histogram(bins = 40, fill = "#2C7FB8",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+ggtitle("MSstatsTMT stat. model")+facet_wrap(~BioVar)+ylim(0,80)
+MSstat_5pctvar
+
 ```
 ### 40% biological variance
 ```{r}
-MSstat_40pctvar<-hist(MSstat_TNresult$pvalue[stringr::str_detect(MSstat_TNresult$Protein,"0.4")],18,col="#2C7FB8",xlab="p-values",cex.lab=1.5,cex.axis=2,main="% of biovar = 40")
+MSstat_40pctvar <- ggplot(
+  MSstat_TNresult |> filter(stringr::str_detect(Protein, "0.4"))|>dplyr::mutate(BioVar= "% of biovar = 40"),
+  aes(x = pvalue)
+) +
+  geom_histogram(bins = 40, fill = "#2C7FB8",color = 'black')+
+  theme(text=element_text(size=16))+xlab("p-value")+facet_wrap(~BioVar)+ylim(0,80)
+
+MSstat_40pctvar
+```
+```{r}
+#generate figure 4
+
+library(ggpubr)
+path<-getwd()
+histograms_simulation<-ggarrange(plotlist = list(TPP5,NPARC_5_emp,SCAM5,MSstat_5pctvar,TPP40,NPARC40_emp,SCAM40,MSstat_40pctvar),nrow=2,ncol=4)
+
+ggplot2::ggsave(path = path, width = 20, height = 6.5, device='png', dpi=600, filename = "Figure4.png")
 ```

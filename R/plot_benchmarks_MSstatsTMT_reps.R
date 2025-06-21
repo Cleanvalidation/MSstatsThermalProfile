@@ -72,7 +72,8 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
      dplyr::ungroup()
  }else{
 
-  annotation_file<-result|>dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
+  annotation_file<-result|>
+    dplyr::select(Run,Mixture,TechRepMixture,BioReplicate,Condition,Subject,Channel)|>dplyr::distinct()
   write.csv(annotation_file,paste0("annotation_file",shifter,"_",design,".csv"))
  }
   #Define a data frame with one protein sim per ICC value
@@ -96,7 +97,14 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))
   dataMSstat<-list(ProteinLevelData=result)
 
-  comparison<-make_contrast_matrix_all(dataMSstat,temps=NA)
+  if(length(t_range)==2){
+    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
+  }else{
+    temps <- NA
+
+  }
+  comparison<-make_contrast_matrix_all(dataMSstat,temps=temps)
+
 
   ATE_MSstats<-MSstatsTMT::groupComparisonTMT(
     dataMSstat,

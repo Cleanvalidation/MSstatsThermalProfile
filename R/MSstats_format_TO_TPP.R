@@ -3,13 +3,26 @@
 MSstats_format_TO_TPP<-function(summarisedProteins,temps,CARRIER=TRUE){
   if(!any(names(summarisedProteins)=="treatment")&!any(names(summarisedProteins)=="TechRepMixture")){
     summarisedProteins$treatment<-stringr::str_extract(summarisedProteins$Condition,'[[:lower:]]+')
+    if(any(names(summarisedProteins)=="File.ID")){
     labels<-summarisedProteins|>dplyr::select(treatment,File.ID)|>
       dplyr::distinct()|>
       dplyr::group_by(treatment)|>
       dplyr::mutate(TechRepMixture=seq(1,dplyr::n()))
+    }else{
+      summarisedProteins<-summarisedProteins|>
+        dplyr::group_by(Group)|>
+        dplyr::mutate(TechRepMixture=as.factor(seq(dplyr::n())),
+                      uniqueID=Protein)|>
+        dplyr::ungroup()
+      labels<-summarisedProteins|>dplyr::select(treatment,Subject,TechRepMixture)|>
+        dplyr::distinct()|>
+        dplyr::mutate(Mixture = as.factor(paste0(treatment,"_",TechRepMixture)))
+
+    }
     if(!any(names(summarisedProteins)=="Experiment")){
       summarisedProteins<- summarisedProteins |> dplyr::right_join(labels) |>
-        dplyr::mutate(Experiment = paste0(treatment,"_",TechRepMixture))
+        dplyr::mutate(Experiment = as.factor(paste0(treatment,"_",TechRepMixture)),
+                      TechRepMixture = as.factor(TechRepMixture))
     }
   }
 
