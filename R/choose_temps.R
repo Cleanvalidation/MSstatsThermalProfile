@@ -18,7 +18,7 @@ choose_temps<-function(df,temps=NA){
     df$temperature<-as.integer(df$temperature)
 
   }
-
+  df$temperature<-stringr::str_extract(df$treatment,"[[:digit:]]+.[:digit:]")
   return(df)
 }
 
