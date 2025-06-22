@@ -14,7 +14,7 @@ make_contrast_matrix_all = function(data,temps=NA){
   #   stop("Remove Reference Channel 131C")
   # }
 
-  contrasts<-choose_temps(data$ProteinLevelData,temps=unique(data$ProteinLevelData$temperature))
+  contrasts<-choose_temps(data$ProteinLevelData,temps=temps)
   if(is.na(any(temps))){
     condition_levels<-contrasts|>dplyr::select(temperature,Condition,Mixture)|>
       unique()
@@ -40,8 +40,9 @@ make_contrast_matrix_all = function(data,temps=NA){
                                                                                                              ,"vehicle"),-1,1),
                                                  ATE))|>dplyr::select(ATE)
   }else{
-  ATE=null_contrasts|>dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
-                                               2/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
+  ATE=null_contrasts|>
+    dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
+                                               4/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
                                                                                                    ,"vehicle"),-1,1),
                                                ATE))|>dplyr::select(ATE)
   }
