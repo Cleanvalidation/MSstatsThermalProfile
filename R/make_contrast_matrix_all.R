@@ -1,5 +1,8 @@
 
-make_contrast_matrix_all = function(data,temps=NA){
+make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
+  if(any(!is.na(variation_temps))){
+    data$ProteinLevelData<-data$ProteinLevelData[data$ProteinLevelData$temperature %in% variation_temps,]
+  }
   if(!any(names(data$ProteinLevelData)=="temperature")){
     stop("No temperature column detected, please add a temperature column")
   }

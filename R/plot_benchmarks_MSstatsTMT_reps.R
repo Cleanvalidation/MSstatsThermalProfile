@@ -1,7 +1,7 @@
 #' @importFrom stringr str_extract
 
 
-plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_range=seq(1,10), n_replicates_per_plex=10){
+plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_range=seq(1,10), n_replicates_per_plex=10,variation_idx=NA){
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")
   }
@@ -97,13 +97,17 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))
   dataMSstat<-list(ProteinLevelData=result)
 
-  if(length(t_range)==2){
+  if(length(t_range)==2&&any(is.na(variation_temps))){
     temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
+
+  }else if(length(t_range)==2&&any(!is.na(variation_idx))){
+    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
+    variation_temps<-temps
   }else{
     temps <- NA
 
   }
-  comparison<-make_contrast_matrix_all(dataMSstat,temps=temps)
+  comparison<-make_contrast_matrix_all(dataMSstat,temps=temps,variation_temps=variation_temps)
 
 
   ATE_MSstats<-MSstatsTMT::groupComparisonTMT(
