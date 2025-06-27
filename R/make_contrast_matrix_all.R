@@ -36,13 +36,20 @@ make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
                                               unique())),
                              temperature=unique(data$ProteinLevelData$temperature))|>
     dplyr::distinct()
-  if(!is.na(any(temps))){
+  if(any(!is.na(temps))){
     contrast<-condition_levels|>dplyr::filter(temperature %in% temps)
     ATE=null_contrasts|>dplyr::mutate(ATE=ifelse(temperature %in% temps,
                                                  2/length(unique(contrast$Condition))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
                                                                                                              ,"vehicle"),-1,1),
                                                  ATE))|>dplyr::select(ATE)
+  }else if (any(!is.na(temps)) && any(!is.na(variation_temps))) {
+    ATE=null_contrasts|>
+      dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
+                               4/nrow(unique(condition_levels))*
+                                 ifelse(stringr::str_detect(stringr::str_to_lower(Condition),"vehicle"),-1,1),
+                               ATE))|>dplyr::select(ATE)
   }else{
+
   ATE=null_contrasts|>
     dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
                                                4/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
