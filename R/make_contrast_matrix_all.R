@@ -1,4 +1,3 @@
-
 make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
   if(any(!is.na(variation_temps))){
     data$ProteinLevelData<-data$ProteinLevelData[data$ProteinLevelData$temperature %in% variation_temps,]
