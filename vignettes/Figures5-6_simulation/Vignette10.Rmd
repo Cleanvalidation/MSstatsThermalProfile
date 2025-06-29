@@ -109,7 +109,14 @@ ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png',
 Thermal_4plex_1repplex_weak_alltemps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(1,10),design="TPP")
 
 #plot histograms
-All_temps_4plex_1repplex_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_weak_alltemps,design="TPP",shifter="weak",t_range=seq(1,2),n_replicates_per_plex=1)
+All_temps_4plex_1repplex_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_weak_alltemps,design="TPP",shifter="weak",t_range=seq(5,6),n_replicates_per_plex=1,variation_idx=NA)
+
+Histogram_weak2TempsFilt <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation/Histogram_weakTPP_MsstatsTMTproc.RDS")
+
+Histogram_weak2TempsFilt<-Histogram_weak2TempsFilt+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_weak2TempsFilt
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_weak2tempsFilt.png")
 ```
 ### Print out ICC distributions and simulate a non shifter(Panel C) 
 
@@ -118,7 +125,15 @@ All_temps_4plex_1repplex_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1re
 Thermal_4plex_1repplex_non_alltemps<-benchmark_nonshifter_sim(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(1,10),design="TPP")
 
 #plot histograms
-All_temps_4plex_1repplex_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_non_alltemps,design="TPP",shifter="non",t_range=seq(1,2),n_replicates_per_plex=1)
+All_temps_4plex_1repplex_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1repplex_non_alltemps,design="TPP",shifter="non",t_range=seq(5,6),n_replicates_per_plex=1,variation_idx=NA)
+
+Histogram_nonTPP_MsstatsTMTprocFilt <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation/Histogram_nonTPP_MsstatsTMTproc.RDS")
+
+Histogram_non2TempsFilt<-Histogram_nonTPP_MsstatsTMTprocFilt+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_non2TempsFilt
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_non2tempsFilt.png")
+
 ```
 
 #D. Figure 5, panel F: for a design with 4 TMT 10-plexes, 1 biological replicates per mixture and 2 temperatures as a contrast with variance components from all 10 temperatures 
@@ -129,7 +144,7 @@ All_temps_4plex_1repplex_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_1rep
 Thermal_4plex_4rep_strong_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(1,10),design="TPP")
 
 #plot histograms
-Two_temps_4plex_4rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_strong_2temps,design="TPP",shifter="strong",t_range=seq(1,10),n_replicates_per_plex=1)
+Two_temps_4plex_4rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_strong_2temps,design="TPP",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=1)
 ```
 ### Simulate a weak shifter(Panel B) 
 
@@ -138,7 +153,7 @@ Two_temps_4plex_4rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_
 Thermal_4plex_4rep_weak_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(1,10),design="TPP")
 
 #plot histograms
-Two_temps_4plex_4rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_weak_2temps,design="TPP",shifter="strong",t_range=seq(1,10),n_replicates_per_plex=1)
+Two_temps_4plex_4rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_weak_2temps,design="TPP",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=1)
 ```
 ### Simulate a weak shifter(Panel C) 
 
@@ -151,7 +166,7 @@ Thermal_4plex_4rep_non_2temps<-benchmark_nonshifter_sim(Dataset_2_ICC,
                                                      design="TPP")
 
 #plot histograms
-Two_temps_4plex_4rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_non_2temps,design="TPP",shifter="non",t_range=seq(1,10),n_replicates_per_plex=1)
+Two_temps_4plex_4rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_non_2temps,design="TPP",shifter="non",t_range=seq(5,6),n_replicates_per_plex=1)
 ```
 
 #E.Figure 5, panel G: for a design with two temperatures, 4 plexes, 5 replicates per plex
@@ -162,7 +177,15 @@ Two_temps_4plex_4rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_4rep_non
 Thermal_4plex_5rep_strong_alltemps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="TPP")
 
 #plot histograms
-All_temps_4plex_5rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_strong_alltemps,design="TPP",shifter="strong",n_replicates_per_plex=5)
+All_temps_4plex_5rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_strong_alltemps,design="TPP",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=5)
+Histogram_strongTPP_5reps <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation/Histogram_strongTPP_MsstatsTMTproc.RDS")
+
+Histogram_strong5reps<-Histogram_strongTPP_5reps+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_strong5reps
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_strong5reps.png")
+
+
 ```
 ### Print out ICC distributions and simulate a weak shifter(panel B)
 
@@ -171,7 +194,15 @@ All_temps_4plex_5rep_strong<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_
 Thermal_4plex_5rep_weak_2temps<-benchmark_shifter_sim(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="TPP")
 
 #plot histograms
-All_temps_4plex_5rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_weak_2temps,design="TPP",shifter="weak",n_replicates_per_plex=5)
+All_temps_4plex_5rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_weak_2temps,design="TPP",shifter="weak",t_range=seq(5,6),n_replicates_per_plex=5)
+Histogram_weakTPP_5reps <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation/Histogram_weakTPP_MsstatsTMTproc.RDS")
+
+Histogram_weak5reps<-Histogram_weakTPP_5reps+theme(text=element_text(size=24))
+path<-getwd()
+
+
+Histogram_weak5reps
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_weak5reps.png")
 ```
 ### Print out ICC distributions and simulate a non shifter(panel C)
 
@@ -180,7 +211,13 @@ All_temps_4plex_5rep_weak<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_we
 Thermal_4plex_5rep_non_2temps<-benchmark_nonshifter_sim(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="TPP")
 
 #plot histograms
-All_temps_4plex_5rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_non_2temps,design="TPP",shifter="non",n_replicates_per_plex=5)
+All_temps_4plex_5rep_non<-plot_benchmarks_MSstatsTMT_reps(Thermal_4plex_5rep_non_2temps,design="TPP",shifter="non",t_range=seq(5,6),n_replicates_per_plex=5)
+Histogram_nonTPP_5reps <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation/Histogram_nonTPP_MsstatsTMTproc.RDS")
+
+Histogram_non5reps<-Histogram_nonTPP_5reps+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_non5reps
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_non5reps.png")
 ```
 
 
