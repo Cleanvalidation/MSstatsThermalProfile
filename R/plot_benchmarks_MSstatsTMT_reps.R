@@ -25,7 +25,7 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
     result$treatment<-result$Condition
   }
   if(n_replicates_per_plex==4&length(t_range)==2){
-    temps<-unique(result$temperature)[t_range] #the temperatures for the contrast
+    temps<-sort(unique(result$temperature))[t_range] #the temperatures for the contrast
     #only keep the temperatures for the contrast
     result<-result|>
       dplyr::filter(temperature %in% temps)
@@ -96,12 +96,13 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
   dataMSstat<-list(ProteinLevelData=result)
 
   if(length(t_range)==2&&any(!is.na(variation_idx))){
-    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
+    temps<-sort(unique(dataMSstat$ProteinLevelData$temperature))[t_range]
     variation_temps<-temps
     dataMSstat$ProteinLevelData <- dataMSstat$ProteinLevelData[dataMSstat$ProteinLevelData$temperature %in% variation_temps,]
 
-  }else if(length(t_range)==2&&any(is.na(variation_temps))){
-    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
+  }else if(length(t_range)==2&&any(is.na(variation_idx))){
+    temps<-sort(unique(dataMSstat$ProteinLevelData$temperature))[t_range]
+    variation_temps<-NA
   }else{
     temps <- NA
 
