@@ -1,7 +1,5 @@
 #' @importFrom stringr str_extract
 plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_range=seq(1,10), n_replicates_per_plex=10,variation_idx=NA){
-  # Declare variation_temps early to avoid undefined errors
-  variation_temps <- NA
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")
   }
@@ -97,12 +95,13 @@ plot_benchmarks_MSstatsTMT_reps<-function(result,design="TPP",shifter="Non",t_ra
   saveRDS(Profile_plot,paste0("Profile_plot_",shifter,design,"_MsstatsTMTproc.RDS"))
   dataMSstat<-list(ProteinLevelData=result)
 
-  if(length(t_range)==2&&any(is.na(variation_temps))){
-    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
-
-  }else if(length(t_range)==2&&any(!is.na(variation_idx))){
+  if(length(t_range)==2&&any(!is.na(variation_idx))){
     temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
     variation_temps<-temps
+    dataMSstat$ProteinLevelData <- dataMSstat$ProteinLevelData[dataMSstat$ProteinLevelData$temperature %in% variation_temps,]
+
+  }else if(length(t_range)==2&&any(is.na(variation_temps))){
+    temps<-unique(dataMSstat$ProteinLevelData$temperature)[t_range]
   }else{
     temps <- NA
 

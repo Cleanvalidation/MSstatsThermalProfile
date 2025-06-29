@@ -41,11 +41,11 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
 
   template_MSstats<-template_MSstats|>
     tidyr::pivot_longer(cols=colnames(template_MSstats)[colnames(template_MSstats)!="Protein"],
-                                                          names_to="Channel_treatment",
-                                                          values_to="Abundance")
+                        names_to="Channel_treatment",
+                        values_to="Abundance")
 
   template_MSstats<-suppressWarnings(dplyr::bind_rows(template_MSstats,
-                                     template_MSstats[template_MSstats$Channel_treatment=="Norm",]))
+                                                      template_MSstats[template_MSstats$Channel_treatment=="Norm",]))
 
 
   #set the template for the simulation
@@ -57,10 +57,10 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   #select a template protein
 
   template_simulation<-suppressWarnings(template_simulation|>
-    tidyr::separate(Channel_treatment,into=c("Channel","treatment"))|>
-    dplyr::mutate(Condition=treatment,
-                  BioReplicate=Condition)|>
-    dplyr::left_join(temps))
+                                          tidyr::separate(Channel_treatment,into=c("Channel","treatment"))|>
+                                          dplyr::mutate(Condition=treatment,
+                                                        BioReplicate=Condition)|>
+                                          dplyr::left_join(temps))
   template_simulation$Condition[is.na(template_simulation$Condition)]<-c("vehicle","treated")
   template_simulation$temperature[is.na(template_simulation$temperature)]<-rep(min(all_proteins$temperature,na.rm=T),2)
   png(filename = paste0("template_MsstatsTMTproc_",shifter,".png"),

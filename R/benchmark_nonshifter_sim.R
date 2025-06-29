@@ -56,7 +56,7 @@ benchmark_nonshifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_r
     scale_size_manual(values=c(8,5))+
     ylab("Log of protein abundances")+
     ggtitle(paste0("Simulation template: non interaction"))+
-    scale_x_continuous("Temperature",breaks=as.numeric(unique(result$temperature)), labels=as.numeric(unique(result$temperature)))+
+    scale_x_continuous("Temperature",breaks=unique(temps$temperature), labels=unique(temps$temperature))+
     theme(text=element_text(size=8))+
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),legend.position="bottom")
   Template_TN
