@@ -21,12 +21,14 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
                                           values_to = "Abundance")
 
   # Get template simulation data
-  template_simulation <- template_MSstats
+  template_simulation <- template_MSstats|>
+    dplyr::arrange(temperature)
 
   # Match channel-temperature mapping
   temps <- all_proteins |>
     dplyr::filter(Protein %in% templateProtein) |>
     dplyr::select(Channel, temperature) |>
+    dplyr::arrange(temperature)|>
     dplyr::distinct()
 
   template_simulation <- template_simulation |>
@@ -40,15 +42,15 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
 
   # Plot template
   png(filename = "template_MsstatsTMTproc_nonshifter.png",
-      width = 12, height = 6, units = "in", pointsize = 12,
+      width = 12, height = 12, units = "in", pointsize = 12,
       res = 600, type = "cairo")
-  Template <- ggplot2::ggplot(template_simulation, ggplot2::aes(x = temperature, y = Abundance, color = treatment)) +
-    ggplot2::geom_point(size = 2) +
-    ggplot2::geom_step(linewidth = 1) +
-    ggplot2::scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature)) +
+  Template <- ggplot2::ggplot(template_simulation, ggplot2::aes(x = treatment, y = Abundance, color = treatment)) +
+    ggplot2::geom_point(size = 4) +
+    #ggplot2::geom_step(linewidth = 1) +
+    #ggplot2::scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature)) +
     ggplot2::labs(title = "Simulation template: non shifter", x = "Temperature", y = "Log of protein abundances") +
     ggplot2::theme_bw() +
-    ggplot2::theme(text = ggplot2::element_text(size = 20),
+    ggplot2::theme(text = ggplot2::element_text(size = 24),
                    axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
   print(Template)
   dev.off()

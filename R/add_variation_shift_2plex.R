@@ -7,7 +7,9 @@ add_variation_shift_2plex <- function(template, icc, n_conditions, n_replicates,
 
 
   template$treatment <- tolower(template$treatment)
-  template <- template %>% mutate(Condition = ifelse(treatment == "vehicle", "1", "2"))
+  template <- template %>%
+    mutate(Condition = ifelse(treatment == "vehicle", "1", "2"))|>
+    dplyr::arrange(temperature)
 
 
   if (design == "TPP") {

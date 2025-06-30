@@ -16,13 +16,14 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   }else{
     all_proteins<-dplyr::bind_rows(msstats_icc_output)
   }
-  temps<-unique(all_proteins$temperature)[t_range]
+  temps<-sort(unique(all_proteins$temperature))[t_range]
 
 
   all_proteins$Protein<-as.character(all_proteins$Protein)
   all_proteins$Condition<-as.character(all_proteins$Condition)
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein))
+                           dplyr::filter(Protein %in% templateProtein)|>
+                           dplyr::arrange(temperature))
 
   #get predicted values per condition
 
