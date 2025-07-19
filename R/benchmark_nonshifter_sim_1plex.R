@@ -1,5 +1,5 @@
 
-benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot"){
+benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot",n_replicates_per_plex=NA){
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")
   }
@@ -9,13 +9,16 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
   if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
     stop("The MSstatsConvert package is required but not installed.")
   }
-
+  temps<-as.character(sort(unique(msstats_icc_output$df_with_variance$temperature))[t_range])
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
-  all_proteins<-msstats_icc_output$df_with_variance#[!msstats_icc_output$df_with_variance$Condition=="Norm",]
+  all_proteins<-msstats_icc_output$df_with_variance|>
+    dplyr::mutate(Protein = as.character(Protein),
+                  temperature= as.character(temperature))
 
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein))
+                           dplyr::filter(Protein %in% templateProtein,
+                                         temperature %in% temps))
 
   #get predicted values per condition
 
@@ -41,22 +44,30 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
   #set th template for hte simulation
   template_simulation<-template_MSstats
   #define mapping between temperatures and TMT channels
-  temps<-all_proteins|>dplyr::mutate(Protein %in% templateProtein)|>dplyr::select(Channel,temperature)|>dplyr::distinct()
+  temps<-all_proteins|>
+    dplyr::mutate(Protein %in% templateProtein)|>
+    dplyr::select(Channel,temperature)|>
+    dplyr::distinct()
+
   #select a template protein
 
   template_simulation<-template_simulation|>
-    tidyr::separate(Condition,into=c("Channel","treatment"))|>
+     tidyr::separate(Condition,into=c("Channel","treatment"))|>
     dplyr::mutate(Condition=paste0(Channel,"_",treatment),
                   BioReplicate=Condition)|>
     dplyr::inner_join(temps)|>dplyr::group_by(temperature)|>
     dplyr::mutate(Abundance=mean(Abundance,na.rm=T))
+
+  temps<-sort(unique(all_proteins$temperature))[t_range]
+
   png(filename = "template_MsstatsTMTproc_nonshifter.png",
-      width =12, height = 6, units = "in", pointsize = 12,
+      width =12, height = 12, units = "in", pointsize = 12,
       res = 600,type ="cairo")
-  Template<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point(size=2)+
-    geom_step(linewidth=1)+
-    scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
-    labs(title="Simulation template: non shifter",x="Temperature",y="Log of protein abundances")+theme_bw()+
+  Template<-ggplot(template_simulation,mapping=aes(x=treatment,y=Abundance,color=treatment))+
+    geom_point(size=4)+
+    # geom_step(linewidth=1)+
+    # scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
+    labs(title="Simulation template: non interaction",x="Temperature",y="Log of protein abundances")+theme_bw()+
     theme(text=element_text(size=20),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   Template
   dev.off()
@@ -65,7 +76,7 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
 
   # dplyr::group_split()|>
   # dplyr::first()
-  icc<-c(0.05,0.2,0.4,0.6,0.8)#from the histogram data, select a range of icc values (0-0.8)
+  icc_range<-c(0.05,0.2,0.4,0.6,0.8)#from the histogram data, select a range of icc values (0-0.8)
 
   re_var<-median(all_proteins$sigma_re^2)
   #define output
@@ -76,24 +87,18 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
   #define the number of temps
 
   n_temps<-length(t_range)
-  #define the number of replicates per condition based on the number of temperatures provided
-  template_simulation
-  #number of replicates per condition
-  if(n_temps==1){
-    n_replicates<-10
-    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
-  }else if(n_temps==2){
+
+  if(n_replicates_per_plex ==5){
+    #number of replicates per condition = 5 because it is 1-plex
     n_replicates<-5
-    template_simulation$Subject<-template_simulation$treatment
-  }else if(n_temps==5){
+  }else if (n_replicates_per_plex == 2){
     n_replicates<-2
-    template_simulation$Subject<-template_simulation$treatment
-  }else if(n_temps==10){
-    n_replicates<-1
   }
+
   df<-template_simulation|>
     dplyr::select(Abundance,temperature,treatment,Channel)|>
     dplyr::arrange(temperature)
+  df$Channel<- Channels[seq(1:nrow(df))]
   result<-list()
   #qc template
   #ggplot(template,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point()
@@ -102,7 +107,7 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
     for(j in icc_range){#for each protein, one intra-class correlation is used to generate a profile
 
       #Simulate profiles with variation components
-      Sims<- add_variation_shift_2plex(df,j,n_conditions,n_replicates,re_var,t_range,design=design)
+      Sims<- add_variation_shift_1plex(df,j,n_conditions,n_replicates,re_var,t_range,design=design)
 
       #Revert the list back to a data frame
       Sims<-dplyr::bind_rows(Sims)
@@ -118,8 +123,36 @@ benchmark_nonshifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_si
   }
 
   #convert list data frames for sims per ICC value to data frame
-  result<-dplyr::bind_rows(result)
+  clean_result <- result[sapply(result, inherits, what = "data.frame")]
+  result <- dplyr::bind_rows(clean_result)
+  if(design=="OnePot"){
+    if(n_replicates_per_plex==5){
+      result<-result|>
+        dplyr::group_by(Protein,Condition)|>
+        dplyr::mutate(Channel = unique(msstats_icc_output$df_with_variance$Channel)[Subject],
+                      temperature = mean(as.numeric(template_simulation$temperature),na.rm=T),
+                      Run = "OnePot",
+                      Mixture = "OnePot")|>
+        dplyr::group_split()|>
+        purrr::map(function(x) x[1:5,])|>
+        dplyr::bind_rows()|>
+        dplyr::ungroup()
+    }else if (n_replicates_per_plex==2){
+      result<-result|>
+        dplyr::group_by(Protein,Condition)|>
+        dplyr::mutate(Channel = unique(msstats_icc_output$df_with_variance$Channel)[Subject],
+                      temperature = mean(as.numeric(template_simulation$temperature),na.rm=T),
+                      Run = "OnePot",
+                      Mixture = "OnePot")|>
+        dplyr::group_split()|>
+        purrr::map(function(x) x[1:2,])|>
+        dplyr::bind_rows()|>
+
+        dplyr::ungroup()
+    }
+  }
 
   return(result)
   #output sigmoid simulations
 }
+

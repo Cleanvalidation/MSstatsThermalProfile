@@ -85,18 +85,18 @@ add_variation_shift_2plex <- function(template, icc, n_conditions, n_replicates,
       )
     return(result)
 
-  } else if (n_temps == 2) {
-    n_subjects <- n_replicates
+  } else if (n_temps == 2 && design == "OnePot") {
+    n_subjects <-10
     modified_matrix <- matrix(NA, nrow = 20,ncol=n_conditions + 2)
     template_temp <- template %>% arrange(temperature)
-    temperatures <- sort(unique(template_temp$temperature))[t_range]
+    temperatures <- sort(unique(template_temp$temperature))
 
     for (i in 1:n_conditions) {
       for (j in 1:n_subjects) {
         sample_u <- rnorm(1, 0, sqrt(biovar))
 
         for (k in 1:n_temps) {
-          current_responses <- template$Abundance[template$Condition == i][t_range[k]]
+          current_responses <- template$Abundance[template$Condition == i][k]
           sample_e <- rnorm(1, 0, sqrt(re_var))
           Y_true <- as.numeric(current_responses)
           Y_observed <- Y_true + sample_u + sample_e#add biological variance and error term
@@ -115,7 +115,9 @@ add_variation_shift_2plex <- function(template, icc, n_conditions, n_replicates,
                                                               values_to="Abundance",
                                                               names_to="Condition")|>
       dplyr::group_by(Subject,Condition)|>
-      dplyr::mutate(Condition=ifelse(Condition==1,"vehicle","treated"))|>
+      dplyr::mutate(Condition=ifelse(Condition==1,"vehicle","treated"),
+                    Abundance = as.numeric(Abundance),
+                    temperature = as.numeric(temperature))|>
       dplyr::group_split()
     if(design=="OnePot"){
       YonePot_cr<-purrr::map2(result,seq(length(result)),function(x,y) {
@@ -131,7 +133,6 @@ add_variation_shift_2plex <- function(template, icc, n_conditions, n_replicates,
                         Mixture=Condition)
       })
       result<-dplyr::bind_rows(YonePot_cr)
-
 
     }else if(design=="TPP"){
       result<-dplyr::bind_rows(result)

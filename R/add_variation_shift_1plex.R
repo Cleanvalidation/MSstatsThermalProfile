@@ -4,18 +4,21 @@
 add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_var,t_range,design="TPP"){
   n_temps<-length(t_range)
   #Define subjects per condition
-  if(n_temps==1){
-    n_subjects<-10
-  }else if(n_temps==2){
-    n_subjects<-5
-  }else if(n_temps==5){
-    n_subjects<-2
-  }else if(n_temps==10){
-    n_subjects<-1
-  }else{#if the number of temps is not within specified range, stop the script
-    stopifnot("Please define n_temps as 1, 2, 5 or 10" = n_temps %in% c(1,2,5,10))
+  if(design=="TPP"){
+    if(n_temps==1){
+      n_subjects<-10
+    }else if(n_temps==2){
+      n_subjects<-5
+    }else if(n_temps==5){
+      n_subjects<-2
+    }else if(n_temps==10){
+      n_subjects<-1
+    }else{#if the number of temps is not within specified range, stop the script
+      stopifnot("Please define n_temps as 1, 2, 5 or 10" = n_temps %in% c(1,2,5,10))
+    }
+  }else{
+    n_subjects<-n_replicates
   }
-
   #QC template curve
   #ggplot(template,mapping=aes(y=Abundance,x=temperature,color=treatment))+geom_point()
   #df is a vector of n_temps abundances corresponding to n_temps (input is per condition)
@@ -40,8 +43,7 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
   #n_conditions
   #n_replicates
 
-  n_obs<-n_temps*n_conditions*n_replicates
-  stopifnot("number of observations must be 20 for the experimental design with 1 TMT-10plex" = n_obs==20)
+  #stopifnot("number of observations must be 10 for the experimental design with 1 TMT-10plex" = n_obs==10)
 
   #modified_matrix[,3]<-seq(1:n_temps)
 
@@ -51,13 +53,13 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
   if(n_temps==1&!design=="OnePot"){#in this case the input has 1 row and 40 cols, each column being a separate subject
     #take the temperature index from the input
     template<-template|>dplyr::group_by(Condition,TechRepMixture)|>dplyr::group_split()
-    template<-lapply(template,function(x) x|>dplyr::mutate(Abundance=rep(x$Abundance[t_range],n_replicates/n_conditions),
-                                                           temperature=rep(x$temperature[t_range],n_replicates/n_conditions)))|>
+    template<-lapply(template,function(x) x|>dplyr::mutate(Abundance=rep(x$Abundance,n_replicates/n_conditions),
+                                                           temperature=rep(x$temperature,n_replicates/n_conditions)))|>
       dplyr::bind_rows()
 
 
     # create an empty matrix to store modified responses
-    modified_matrix <- matrix(nrow = 1, ncol = 20)
+    modified_matrix <- matrix(nrow = 1, ncol = 10)
 
     for ( i in 1:n_conditions){
       #iterate over the number of subjects defined as an input and generate biological variation per subject
@@ -91,33 +93,35 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
                                 names_to="Subject",
                                 values_to="Abundance")|>
       dplyr::mutate(Condition=ifelse(stringr::str_detect(Subject,"vehicle"),1,2),
-                    TechRepMixture=1)
+                    TechRepMixture=1,
+                    Abundance=as.numeric(Abundance))
     #generate temperature values selected
 
 
     result$Temperature<-rep(t_range,nrow(result))
 
     result$BioReplicate<-result$Subject
-    result$Mixture<-result$Subject
-    result$Run<-result$Subject
+    result$Mixture<-"OnePot"
+    result$Run<-"OnePot"
     result$treatment<-ifelse(result$Condition=="1","vehicle","treatment")
     result$temperature<-stringr::str_remove(stringr::str_extract(result$Subject,"[[:digit:]]+.[:digit:]|[[:digit:]]+_"),"_")
     result$Condition<-result$treatment
     result$Channel<-unique(template$Channel)[t_range]
     result$TechRepMixture<-1
-  }else if(n_temps==2){#If this is a 2 temperature design
-    n_temps<-2
-    n_subjects<-10
+  }else if(n_temps==2 && design =="OnePot"){#If this is a 2 temperature design
+
     # create an empty matrix to store modified responses
-    modified_matrix <- matrix(NA, nrow = 20, ncol = n_conditions + 2)
-    template_temp<-template%>%dplyr::arrange(temperature)
-    temperatures <- unique(template_temp$temperature)[t_range]#get temperatures from the data
+    modified_matrix <- matrix(NA, nrow = 10,ncol=n_conditions + 2)
+    template <- template %>% arrange(as.numeric(Condition))
+    temperatures <- sort(unique(as.numeric(template_temp$temperature)))
+
     for (i in 1:n_conditions) {
       for (j in 1:n_subjects) {
-        sample_u <- rnorm(1, mean = 0, sd = sqrt(biovar))#simulate subject effect
+        sample_u <- rnorm(1, 0, sqrt(biovar))
+
         for (k in 1:n_temps) {
-          current_responses <- template$Abundance[template$Condition == i][t_range[k]]
-          sample_e <- rnorm(1, mean = 0, sd = sqrt(re_var))#simulate random error
+          current_responses <- template$Abundance[template$Condition == i][k]
+          sample_e <- rnorm(1, 0, sqrt(re_var))
           Y_true <- as.numeric(current_responses)
           Y_observed <- Y_true + sample_u + sample_e#add biological variance and error term
           #for a separate function, unlog Y_observed, average Y_obs for all temps, log
@@ -127,14 +131,18 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
         }
       }
     }
+
     colnames(modified_matrix) <- c(seq(n_conditions), "temperature","Subject")
     modified_df <- as.data.frame(modified_matrix)
 
-    result<-modified_df|>as.data.frame()|>tidyr::pivot_longer(cols=colnames(modified_df)[colnames(modified_df)!="Subject"&colnames(modified_df)!="temperature"],
+    result<-modified_df|>
+      as.data.frame()|>
+      tidyr::pivot_longer(cols=colnames(modified_df)[colnames(modified_df)!="Subject"&colnames(modified_df)!="temperature"],
                                                               values_to="Abundance",
                                                               names_to="Condition")|>
       dplyr::group_by(Subject,Condition)|>
-      dplyr::mutate(Condition=ifelse(Condition==1,"vehicle","treated"))|>
+      dplyr::mutate(Condition=ifelse(Condition==1,"vehicle","treated"),
+                    Abundance=as.numeric(Abundance))|>
       dplyr::group_split()
     if(design=="OnePot"){
       YonePot_cr<-purrr::map2(result,seq(length(result)),function(x,y) {
@@ -150,8 +158,14 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
                         Mixture=Condition)
 
       })
+
       result<-dplyr::bind_rows(YonePot_cr)
-      #return(YonePot_cr)
+      result<-result[!is.na(result$Abundance),]
+      result$Mixture<-"OnePot"
+      result$Run<-"OnePot"
+      result$TechRepMixture <- 1
+      result$temperature<-mean(temperatures,na.rm=T)
+      return(YonePot_cr)
     }else if(design=="TPP"){
       result<-dplyr::bind_rows(result)
       #generate temperature values selected
@@ -164,7 +178,7 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
                                           Subject=unique(result$Subject))|>dplyr::distinct()
       result<-result|>dplyr::inner_join(Channel_subject_mapping,relationship="many-to-many")|>
         dplyr::mutate(Mixture=ifelse(Condition==1,"vehicle","treated"))
-      #return(result)
+      return(result)
     }
 
     #generate temperature values selected
@@ -175,7 +189,7 @@ add_variation_shift_1plex<-function(template,icc,n_conditions,n_replicates,re_va
     result$Mixture<-result$Condition
     result$temperature<-mean(unique(modified_df$temperature))
     result<-result|>dplyr::arrange(Condition)
-    result$Channel<-as.character(rep(set_temps(10,seq(1,10))$Channel,2))
+
     result<-dplyr::bind_rows(result)
     return(result)
   }else if(n_temps>1){# if the design has more than one temperature, add variance components

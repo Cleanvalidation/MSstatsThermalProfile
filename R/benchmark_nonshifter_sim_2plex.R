@@ -3,11 +3,16 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) stop("The MSstatsTMT package is required but not installed.")
   if (!requireNamespace("MSstats", quietly = TRUE)) stop("The MSstats package is required but not installed.")
   if (!requireNamespace("MSstatsConvert", quietly = TRUE)) stop("The MSstatsConvert package is required but not installed.")
+  temps<-as.character(sort(unique(msstats_icc_output$df_with_variance$temperature))[t_range])
+  #all proteins is the normalized processed output from msstats_icc
+  #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
+  all_proteins<-msstats_icc_output$df_with_variance|>
+    dplyr::mutate(Protein = as.character(Protein),
+                  temperature= as.character(temperature))
 
-  # Get protein data with variance
-  all_proteins <- msstats_icc_output$df_with_variance
-  template_MSstats <- list(ProteinLevelData = dplyr::filter(all_proteins, Protein %in% templateProtein))
-
+  template_MSstats<-list(ProteinLevelData=all_proteins|>
+                           dplyr::filter(Protein %in% templateProtein,
+                                         temperature %in% temps))
   # Rename for MSstats
   template_MSstats$ProteinLevelData$LogIntensities <- template_MSstats$ProteinLevelData$Abundance
   template_MSstats$ProteinLevelData$GROUP <- template_MSstats$ProteinLevelData$Condition
@@ -15,14 +20,11 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
 
   # MSstats quantification
   template_MSstats <- MSstats::quantification(template_MSstats, type = "Group", use_log_file = FALSE)
-  template_MSstats <- tidyr::pivot_longer(template_MSstats,
-                                          cols = setdiff(names(template_MSstats), "Protein"),
-                                          names_to = "Condition",
-                                          values_to = "Abundance")
+  template_MSstats <- tidyr::pivot_longer(data = template_MSstats,
+                                          cols=colnames(template_MSstats)[colnames(template_MSstats)!="Protein"],
+                                          names_to="Channel_treatment",
+                                          values_to="Abundance")
 
-  # Get template simulation data
-  template_simulation <- template_MSstats|>
-    dplyr::arrange(temperature)
 
   # Match channel-temperature mapping
   temps <- all_proteins |>
@@ -31,15 +33,18 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
     dplyr::arrange(temperature)|>
     dplyr::distinct()
 
-  template_simulation <- template_simulation |>
-    tidyr::separate(Condition, into = c("Channel", "treatment")) |>
-    dplyr::mutate(Condition = paste0(Channel, "_", treatment),
-                  BioReplicate = Condition) |>
-    dplyr::inner_join(temps, by = "Channel") |>
-    dplyr::group_by(temperature) |>
-    dplyr::mutate(Abundance = mean(Abundance, na.rm = TRUE)) |>
-    dplyr::ungroup()
 
+
+  template_simulation <- suppressWarnings(template_MSstats|>
+                                            tidyr::separate(Channel_treatment,into=c("Channel","treatment"))|>
+                                            dplyr::mutate(Condition=treatment,
+                                                          BioReplicate=Condition)|>
+                                            dplyr::left_join(temps)|>
+                                            dplyr::group_by(temperature) |>
+                                            dplyr::mutate(Abundance = mean(Abundance, na.rm = TRUE),
+                                                          treatment = stringr::str_extract(stringr::str_to_lower(Condition),"[[:lower:]]+")) |>
+                                            dplyr::ungroup())|>na.omit()
+  temps<-sort(unique(all_proteins$temperature))[t_range]
   # Plot template
   png(filename = "template_MsstatsTMTproc_nonshifter.png",
       width = 12, height = 12, units = "in", pointsize = 12,
@@ -48,7 +53,7 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
     ggplot2::geom_point(size = 4) +
     #ggplot2::geom_step(linewidth = 1) +
     #ggplot2::scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature)) +
-    ggplot2::labs(title = "Simulation template: non shifter", x = "Temperature", y = "Log of protein abundances") +
+    ggplot2::labs(title = "Simulation template: non interaction", x = "Temperature", y = "Log of protein abundances") +
     ggplot2::theme_bw() +
     ggplot2::theme(text = ggplot2::element_text(size = 24),
                    axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
@@ -66,9 +71,20 @@ benchmark_nonshifter_sim_2plex <- function(msstats_icc_output, templateProtein, 
 
   # Calculate valid number of replicates
   max_channels <- 20
-  n_replicates <- floor(max_channels / (n_conditions * n_temps))
-  n_obs <- n_replicates * n_conditions * n_temps
-
+  #number of replicates per condition
+  if(n_temps==1){
+    n_replicates<-20
+    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
+  }else if(n_temps==2){
+    n_replicates<-10
+    template_simulation$Subject<-template_simulation$treatment
+  }else if(n_temps==5){
+    n_replicates<-4
+    template_simulation$Subject<-template_simulation$treatment
+  }else if(n_temps==10){
+    n_replicates<-2
+  }
+  n_obs <- n_temps * n_replicates
   if (n_obs != max_channels) {
     stop(paste("Number of observations must be", max_channels,
                "for the experimental design with 2 TMT-10plexes. Got", n_obs, "instead."))

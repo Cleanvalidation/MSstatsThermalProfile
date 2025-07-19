@@ -1,6 +1,6 @@
-make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
+make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA,plexes=NA){
   if(any(!is.na(variation_temps))){
-    data$ProteinLevelData<-data$ProteinLevelData[data$ProteinLevelData$temperature %in% variation_temps,]
+    data$ProteinLevelData<-data$ProteinLevelData[as.character(data$ProteinLevelData$temperature) %in% variation_temps,]
   }
   if(!any(names(data$ProteinLevelData)=="temperature")){
     stop("No temperature column detected, please add a temperature column")
@@ -17,8 +17,9 @@ make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
   # }
 
   contrasts<-choose_temps(data$ProteinLevelData,temps=temps)
-  if(is.na(any(temps))){
-    condition_levels<-contrasts|>dplyr::select(temperature,Condition,Mixture)|>
+  if(any(is.na(temps))){
+    condition_levels<-contrasts|>
+      dplyr::select(temperature,Condition,Mixture)|>
       unique()
   }else{
     temps<-as.character(temps)
@@ -46,6 +47,12 @@ make_contrast_matrix_all = function(data,temps=NA, variation_temps=NA){
       dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
                                4/nrow(unique(condition_levels))*
                                  ifelse(stringr::str_detect(stringr::str_to_lower(Condition),"vehicle"),-1,1),
+                               ATE))|>dplyr::select(ATE)
+  }else if (!is.na(plexes)){
+    ATE=null_contrasts|>
+      dplyr::mutate(ATE=ifelse(Condition %in% unique(condition_levels$Condition),
+                               2/nrow(unique(condition_levels))*ifelse(stringr::str_detect(stringr::str_to_lower(Condition)
+                                                                                           ,"vehicle"),-1,1),
                                ATE))|>dplyr::select(ATE)
   }else{
 

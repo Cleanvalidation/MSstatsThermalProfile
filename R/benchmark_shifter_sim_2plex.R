@@ -22,7 +22,8 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   all_proteins$Protein<-as.character(all_proteins$Protein)
   all_proteins$Condition<-as.character(all_proteins$Condition)
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein)|>
+                           dplyr::filter(Protein %in% templateProtein,
+                                         temperature%in%temps)|>
                            dplyr::arrange(temperature))
 
   #get predicted values per condition
@@ -65,16 +66,18 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   template_simulation$Condition[is.na(template_simulation$Condition)]<-c("vehicle","treated")
   template_simulation$temperature[is.na(template_simulation$temperature)]<-rep(min(all_proteins$temperature,na.rm=T),2)
   png(filename = paste0("template_MsstatsTMTproc_",shifter,".png"),
-      width =12, height = 6, units = "in", pointsize = 12,
+      width =12, height = 12, units = "in", pointsize = 12,
       res = 600,type ="cairo")
-  Template<-ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=Condition))+geom_point(size=2)+
-    geom_step(linewidth=1)+
-    scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
+  Template<-ggplot(template_simulation,mapping=aes(x=treatment,y=Abundance,color=Condition))+
+    geom_point(size=4)+
+    # geom_step(linewidth=1)+
+    # scale_x_continuous("Temperature", breaks = unique(template_simulation$temperature))+
     labs(title=paste0("Simulation template: ",shifter," shifter"),x="Temperature",y="Log of protein abundances")+theme_bw()+
-    theme(text=element_text(size=20),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-    annotate("rect", xmin=52.8, xmax = 58.1,ymin=min(template_simulation$Abundance)-0.5,
-             ymax=max(template_simulation$Abundance)+0.5,
-             alpha=0.2, fill="#2C7FB8")+ylim(min(template_simulation$Abundance)-0.5,max(template_simulation$Abundance)+0.5)
+    theme(text=element_text(size=34),axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    # annotate("rect", xmin=52.8, xmax = 58.1,ymin=min(template_simulation$Abundance)-0.5,
+    #          ymax=max(template_simulation$Abundance)+0.5,
+    #          alpha=0.2, fill="#2C7FB8")+
+    ylim(min(template_simulation$Abundance)-0.5,max(template_simulation$Abundance)+0.5)
   Template
   dev.off()
   saveRDS(Template,paste0("templateMSstatsTMTproc_",shifter,".RDS"))
@@ -96,17 +99,26 @@ benchmark_shifter_sim_2plex<-function(msstats_icc_output,templateProtein,n_sims,
   #define the number of replicates per condition based on the number of temperatures provided
   template_simulation
   #number of replicates per condition
-  if(n_temps==1){
-    n_replicates<-20
-    template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
-  }else if(n_temps==2){
-    n_replicates<-10
-    template_simulation$Subject<-template_simulation$treatment
-  }else if(n_temps==5){
-    n_replicates<-4
-    template_simulation$Subject<-template_simulation$treatment
-  }else if(n_temps==10){
-    n_replicates<-2
+  if(design == "TPP"){
+    if(n_temps==1){
+      n_replicates<-20
+      template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
+    }else if(n_temps==2){
+      n_replicates<-10
+      template_simulation$Subject<-template_simulation$treatment
+    }else if(n_temps==5){
+      n_replicates<-4
+      template_simulation$Subject<-template_simulation$treatment
+    }else if(n_temps==10){
+      n_replicates<-2
+    }
+  }else{
+    if(n_temps==1){
+      n_replicates<-10
+      template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
+    }else{
+      n_replicates <- 10
+    }
   }
   df<-template_simulation|>
     dplyr::filter(!temperature==min(template_simulation$temperature,na.rm=T))|>

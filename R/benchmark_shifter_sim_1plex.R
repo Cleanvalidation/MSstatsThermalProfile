@@ -1,4 +1,4 @@
-benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot",shifter="strong"){
+benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,t_range=seq(7,7),design="OnePot",shifter="strong",n_replicates_per_plex=NA){
   if (!requireNamespace("MSstatsTMT", quietly = TRUE)) {
     stop("The MSstatsTMT package is required but not installed.")
   }
@@ -8,15 +8,17 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   if (!requireNamespace("MSstatsConvert", quietly = TRUE)) {
     stop("The MSstatsConvert package is required but not installed.")
   }
+  temps<-sort(unique(msstats_icc_output$df_with_variance$temperature))[t_range]
+  Channels<-unique(msstats_icc_output$df_with_variance$Channel)
 
   #all proteins is the normalized processed output from msstats_icc
   #msstats_icc_output<-msstats_icc(MSstats_Humanproc_wImputation,temps=unique(MSstats_Humanproc_wImputation$ProteinLevelData$temperature))
   all_proteins<-msstats_icc_output$df_with_variance
   # #get temperatures
-  # temps<-unique(msstats_icc_output$df_with_variance$temperature)[t_range]
   #filter by template protein
   template_MSstats<-list(ProteinLevelData=all_proteins|>
-                           dplyr::filter(Protein %in% templateProtein))
+                           dplyr::filter(Protein %in% templateProtein,
+                                         temperature %in% temps))
 
 
 
@@ -44,7 +46,10 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   #set the template for simulation
   template_simulation<-template_MSstats
   #define mapping between temperatures and TMT channels
-  temps<-all_proteins|>dplyr::mutate(Protein %in% templateProtein)|>dplyr::select(Channel,temperature)|>dplyr::distinct()
+  temps<-all_proteins|>
+    dplyr::mutate(Protein %in% templateProtein)|>
+    dplyr::select(Channel,temperature)|>
+    dplyr::distinct()
   #select a template protein
 
   template_simulation<-template_simulation|>
@@ -53,9 +58,9 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
                     BioReplicate=Condition)|>
     dplyr::inner_join(temps)
   png(filename = "template_MsstatsTMTproc_with_quant.png",
-      width =600, height = 600, units = "px", pointsize = 12,
-      res = 130,type ="cairo")
-  ggplot(template_simulation,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point()
+      width =12, height = 12, units = "in", pointsize = 12,
+      res = 600,type ="cairo")
+  ggplot(template_simulation,mapping=aes(x=treatment,y=Abundance,color=treatment))+geom_point()
   dev.off()
   #define inputs
 
@@ -74,13 +79,23 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
   n_temps<-length(t_range)
   #define the number of replicates per condition based on the number of temperatures provided
   template_simulation
-  #number of replicates per condition = 5 because it is 1-plex
-  n_replicates<-5
+  if(n_replicates_per_plex ==5){
+    #number of replicates per condition = 5 because it is 1-plex
+    n_replicates<-5
+  }else if (n_replicates_per_plex == 2){
+    n_replicates<-2
+  }
 
-  template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
 
+  if(n_temps==2 & design == "OnePot"){
+    template_simulation$Subject<-template_simulation$treatment
+    template_simulation$Condition<-template_simulation$Subject
+  }else{
+    #template_simulation$Subject<-paste0(template_simulation$temperature,"_",template_simulation$TechRepMixture,"_",paste0(template_simulation$Condition))#organize this in one place
+  }
   df<-template_simulation|>
     dplyr::select(Abundance,temperature,treatment,Channel)
+  df$Channel<- Channels[seq(1:nrow(df))]
   result<-list()
   #qc template
   #ggplot(template,mapping=aes(x=temperature,y=Abundance,color=treatment))+geom_point()
@@ -103,9 +118,34 @@ benchmark_shifter_sim_1plex<-function(msstats_icc_output,templateProtein,n_sims,
     }
 
   }
+  clean_result <- result[sapply(result, inherits, what = "data.frame")]
+  result <- dplyr::bind_rows(clean_result)
+  if(design=="OnePot"){
+    if(n_replicates_per_plex==5){
+      result<-result|>
+        dplyr::group_by(Protein,Condition)|>
+        dplyr::mutate(Channel = unique(msstats_icc_output$df_with_variance$Channel)[Subject],
+                      temperature = mean(template_simulation$temperature,na.rm=T),
+                      Run = "OnePot",
+                      Mixture = "OnePot")|>
+        dplyr::group_split()|>
+        purrr::map(function(x) x[1:5,])|>
+        dplyr::bind_rows()|>
+        dplyr::ungroup()
+    }else if (n_replicates_per_plex==2){
+      result<-result|>
+        dplyr::group_by(Protein,Condition)|>
+        dplyr::mutate(Channel = unique(msstats_icc_output$df_with_variance$Channel)[Subject],
+                      temperature = mean(template_simulation$temperature,na.rm=T),
+                      Run = "OnePot",
+                      Mixture = "OnePot")|>
+        dplyr::group_split()|>
+        purrr::map(function(x) x[1:2,])|>
+        dplyr::bind_rows()|>
 
-  #convert list data frames for sims per ICC value to data frame
-  result<-dplyr::bind_rows(result)
+        dplyr::ungroup()
+    }
+  }
 
   return(result)
   #output sigmoid simulations

@@ -92,7 +92,8 @@ add_variation_shift<-function(template,icc,n_conditions,n_replicates,re_var,t_ra
                                 names_to="Subject",
                                 values_to="Abundance")|>
       dplyr::mutate(Condition=ifelse(stringr::str_detect(Subject,"vehicle"),1,2),
-                    TechRepMixture=1)
+                    TechRepMixture=1,
+                    Abundance=as.numeric(Abundance))
     #generate temperature values selected
 
 

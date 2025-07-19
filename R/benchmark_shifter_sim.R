@@ -44,7 +44,10 @@ benchmark_shifter_sim<-function(msstats_icc_output,templateProtein,n_sims,t_rang
   #set th template for hte simulation
   template_simulation<-template_MSstats
   #define mapping between temperatures and TMT channels
-  temps<-all_proteins|>dplyr::mutate(Protein %in% templateProtein)|>dplyr::select(Channel,temperature,treatment)|>dplyr::distinct()
+  temps<-all_proteins|>
+    dplyr::mutate(Protein %in% templateProtein)|>
+    dplyr::select(Channel,temperature,treatment)|>
+    dplyr::distinct()
   #select a template protein
 
   template_simulation<-template_simulation|>
