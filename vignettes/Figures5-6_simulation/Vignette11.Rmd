@@ -25,8 +25,8 @@ library(tidyr)
 
 ```{r}
 #read summarised protein output from MSstatsTMT
-summarised.proteins<- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation_data/summarised.proteinsD1.RDS")
-summarised.proteinsNS<- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation_data/summarised.proteinsZebra.RDS")
+summarised.proteins<- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation_data/summarised.proteinsD1.RDS")
+summarised.proteinsNS<- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation_data/summarised.proteinsZebra.RDS")
 ```
 
 #B.Figure 6, panel D design: 2 TMT 10-plexes, 10 biological replicates and 2 temperatures 
@@ -36,62 +36,116 @@ summarised.proteinsNS<- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_s
 #get variance components
 Dataset_1_ICC<-msstats_icc(summarised.proteins,temps=unique(summarised.proteins$ProteinLevelData$temperature))
 #generate simulations
- OnePot_2plex_10repsstrong<-benchmark_shifter_sim_2plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot",shifter="strong")
-Histograms_2temp_strong_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_10repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =5)
+ OnePot_2plex_10repsstrong<-benchmark_shifter_sim_2plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),n_replicates_per_plex =5,design="OnePot",shifter="strong")
+Histograms_2temp_strong_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_10repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =5,plexes=2)
+
+Histogram_strongOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_strongOnePot5_MsstatsTMTproc.RDS")
+Histogram_strong10<-Histogram_strongOnePot_MsstatsTMTproc+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_strong10
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_strong10.png")
 ```
-###Simulate a weak interactor for a design with two temperatures, 2 plexes, 5 replicates per plex  by Condition
+###Simulate a weak interactor for a design with two temperatures, 2 plexes, 10 replicates per plex  by Condition
 
 ```{r}
 #generate simulations
- OnePot_2plex_10repsweak<-benchmark_shifter_sim_2plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot",shifter="weak")
-Histograms_2temp_weak_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_10repsweak,design="OnePot",shifter="weak",t_range=seq(5,6),n_replicates_per_plex =5)
+OnePot_2plex_10repsweak<-benchmark_shifter_sim_2plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot",shifter="weak")
+Histograms_2temp_weak_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_10repsweak,design="OnePot",shifter="weak",t_range=seq(5,6),n_replicates_per_plex =5,variation_idx=NA,plexes=2)
+
+Histogram_weakOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_weakOnePot5_MsstatsTMTproc.RDS")
+Histogram_weak10<-Histogram_weakOnePot_MsstatsTMTproc+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_weak10
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_weak10.png")
 ```
-##Print out ICC values and simulate a non-interactor for a design with two temperatures, 2 plexes, 5 replicates per plex by Condition
+##Print out ICC values and simulate a non-interactor for a design with two temperatures, 2 plexes, 10 replicates per plex by Condition
 
 ```{r}
 #get variance components
 Dataset_2_ICC<-msstats_icc(summarised.proteinsNS,temps=unique(summarised.proteinsNS$ProteinLevelData$temperature))
 #generate simulations
 
- OnePot_2plex_10repsnon<-benchmark_nonshifter_sim_2plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_non_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps(  OnePot_2plex_10repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5)
+ OnePot_2plex_10repsnon<-benchmark_nonshifter_sim_2plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),n_replicates_per_plex =5,design="OnePot")
+Histograms_2temp_non_onePot_10reps<-plot_benchmarks_MSstatsTMT_reps(  OnePot_2plex_10repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5,plexes=2)
+
+Histogram_nonOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_nonOnePot5_MsstatsTMTproc.RDS")
+Histogram_non10<-Histogram_nonOnePot_MsstatsTMTproc+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_non10
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_non10.png")
 ```
 #C. Figure 6, panel E: for a design with 1 TMT 10-plex, 1 biological replicate per mixture, 2 temperatures per plex and 2 temperatures as contrast
 ###Simulate a strong interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 ```{r}
-OnePot_1plex_5repsstrong<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_strong_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_5repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =5)
+OnePot_1plex_5repsstrong<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=5)
+Histograms_2temp_strong_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_5repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =5,variation_idx = NA,plexes=1)
+Histogram_strongOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_strongOnePot5_MsstatsTMTproc.RDS")
+Histogram_strong5<-Histogram_strongOnePot_MsstatsTMTproc+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_strong5
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_strong5.png")
 ```
 ###Simulate a weak interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_5repsweak<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_weak_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_5repsweak,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex =5)
+OnePot_1plex_5repsweak<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=5)
+
+Histograms_2temp_weak_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps(OnePot_1plex_5repsweak,design="OnePot",shifter="weak",t_range=seq(5,6),n_replicates_per_plex=5,variation_idx = NA,plexes=1)
+
+Histogram_weakOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_weakOnePot5_MsstatsTMTproc.RDS")
+Histogram_weak5<-Histogram_weakOnePot_MsstatsTMTproc+theme(text=element_text(size=24))
+path<-getwd()
+Histogram_weak5
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_weak5.png")
 ```
 
 ###Simulate a non interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_5repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_non_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_5repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5)
+OnePot_1plex_5repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=5)
+Histograms_1temp_non_onePot_5reps<-plot_benchmarks_MSstatsTMT_reps(OnePot_1plex_5repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex =5,variation_idx = NA,plexes=1)
+
+Histogram_nonOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/Histogram_nonOnePot_MsstatsTMTproc.RDS")
+Histogram_non5<-Histogram_nonOnePot_MsstatsTMTproc+theme(text=element_text(size=40))
+path<-getwd()
+Histogram_non5
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_non5.png")
 ```
 #D. Figure 6, panel F: for a design with 1 TMT 10-plex, 2 biological replicates per mixture and 2 temperatures 
 
 ###Simulate a strong interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
 ```{r}
-OnePot_1plex_2repsstrong<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_strong_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=2)
+OnePot_1plex_2repsstrong<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="P36507",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=2)
+Histograms_2temp_strong_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsstrong,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=2,variation_idx = NA,plexes=1)
+
+Histogram_strongOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/Histogram_strongOnePot2_MsstatsTMTproc.RDS")
+Histogram_strong2<-Histogram_strongOnePot_MsstatsTMTproc+theme(text=element_text(size=40))
+path<-getwd()
+Histogram_strong2
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_strong2.png")
 ```
-###Simulate a weak interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
+###Simulate a weak interactor for a design with two temperatures, 1 plex, 2 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_2repsweak<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_weak_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsweak,design="OnePot",shifter="strong",t_range=seq(5,6),n_replicates_per_plex=2)
+OnePot_1plex_2repsweak<-benchmark_shifter_sim_1plex(Dataset_1_ICC,templateProtein="O00422",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=2)
+Histograms_2temp_weak_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsweak,design="OnePot",shifter="weak",t_range=seq(5,6),n_replicates_per_plex=2,variation_idx = NA,plexes=1)
+
+Histogram_weakOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_weakOnePot2_MsstatsTMTproc.RDS")
+Histogram_weak2<-Histogram_weakOnePot_MsstatsTMTproc+theme(text=element_text(size=40))
+path<-getwd()
+Histogram_weak2
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_weak2.png")
 ```
 
-###Simulate a non interactor for a design with two temperatures, 1 plex, 5 replicates per plex  by Condition
+###Simulate a non interactor for a design with two temperatures, 1 plex, 2 replicates per plex  by Condition
 
 ```{r}
-OnePot_1plex_2repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot")
-Histograms_2temp_non_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_2plex_2repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex=2)
+OnePot_1plex_2repsnon<-benchmark_nonshifter_sim_1plex(Dataset_2_ICC,templateProtein="Q6NV46",n_sims=1000,t_range=seq(5,6),design="OnePot",n_replicates_per_plex=2)
+Histograms_2temp_non_onePot_2reps<-plot_benchmarks_MSstatsTMT_reps( OnePot_1plex_2repsnon,design="OnePot",shifter="non",t_range=seq(5,6),n_replicates_per_plex=2,variation_idx = NA,plexes=1)
+
+Histogram_nonOnePot_MsstatsTMTproc <- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation/Histogram_nonOnePot2_MsstatsTMTproc.RDS")
+Histogram_non2<-Histogram_nonOnePot_MsstatsTMTproc+theme(text=element_text(size=40))
+path<-getwd()
+Histogram_non2
+ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png', dpi=600, filename = "Histogram_non2.png")
 ```
