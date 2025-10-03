@@ -28,7 +28,8 @@ Load in MSstatsTMT processed data
 
 ```{r}
 #read summarised protein output from MSstatsTMT
-summarised.proteins<- readRDS("~/MSstatsThermalProfiler/vignettes/Dataset_3a-b_simulation_data/summarised.proteinsD1.RDS")
+data_path <- system.file("extdata", "summarised.proteinsD1.rds", package = "MSstatsThermalProfiler")
+summarised.proteins <- readRDS(data_path)
 ```
 
 #B.Figure 5, panel D design: 4 TMT 10-plexes, 4 biological replicates and 10 temperatures 
@@ -69,7 +70,9 @@ ggplot2::ggsave(path = path, width = 10, height = 8, units = 'in', device='png',
  
 ```{r}
 #read in Zebradata 
-summarised.proteinsZebra <- readRDS("~/MSstatsThermalProfiler/vignettes/Figures5-6_simulation_data/summarised.proteinsZebra.RDS")
+# vignettes/my-vignette.Rmd
+data_path <- system.file("extdata", "summarised.proteinsZebra.rds", package = "MSstatsThermalProfiler")
+summarised.proteinsZebra <- readRDS(data_path)
 #generate ICC distribution for all summarised proteins for Dataset 2 with MSstatsTMT processing
 Dataset_2_ICC<-msstats_icc(summarised.proteinsZebra,temps=unique(summarised.proteinsZebra$ProteinLevelData$temperature))
 #Generate simulations for true negative accession

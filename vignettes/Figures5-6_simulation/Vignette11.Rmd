@@ -25,8 +25,11 @@ library(tidyr)
 
 ```{r}
 #read summarised protein output from MSstatsTMT
-summarised.proteins<- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation_data/summarised.proteinsD1.RDS")
-summarised.proteinsNS<- readRDS("~/MSstatsThermalProfile/vignettes/Figures5-6_simulation_data/summarised.proteinsZebra.RDS")
+data_path <- system.file("extdata", "summarised.proteinsD1.RDS", package = "MSstatsThermalProfiler")
+summarised.proteins<- readRDS(data_path)
+
+data_pathNS <- system.file("extdata", "summarised.proteinsZebra.RDS", package = "MSstatsThermalProfiler")
+summarised.proteinsNS<- readRDS(data_pathNS)
 ```
 
 #B.Figure 6, panel D design: 2 TMT 10-plexes, 10 biological replicates and 2 temperatures 
