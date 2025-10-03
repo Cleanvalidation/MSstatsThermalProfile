@@ -279,13 +279,13 @@ MSstatsTMT stat. mod."=Thermal_lateMSstatsTMTprocesed$`MSstatsTMT temp.`),list(
   "Reference set"=na.omit(kinases$Accession),
   "3b: MSstatsTMT proc. 
   OnePotMSstatsTMT stat. mod."=MSstat_hits))
-
+figure8D<-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
 png(filename = "VennMSstatsTMT_Fulltemp_vs_OnePot_MSstatsTMTproc_unique_Median.png",
     width =12, height = 6, units = "in", pointsize = 12,
     res = 600,type ="cairo")  
 
 library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
 
 dev.off() 
 ```
@@ -303,7 +303,14 @@ summarised.proteins<-lapply(summarised.proteins,function(x) {
   x$Condition<-ifelse(x$Condition=="10xstauro","D_10xstauro",x$Condition)
   x$Condition<-ifelse(x$Condition=="25xstauro","E_25xstauro",x$Condition)
   return(x)})
-MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="P36507")
+P36507<-MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="P36507",address=FALSE)
+
+P36507<-P36507+theme(text=element_text(size=40))
+
+ggsave(filename = "OnePot_P36507profile.png",
+    width =12, height = 12, units = "in", pointsize = 40,
+    dpi = 600,type ="cairo")  
+
 MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Protein="Q9Y5S2")
 ```
 
@@ -321,19 +328,24 @@ MSstatsTMT::dataProcessPlotsTMT(summarised.proteins,type="PROFILEPLOT",which.Pro
 #I. Figure 8, panel A: Venn Diagram for MSstatsTMT compared to the reference set and PD protein summary
 ```{r}
 
+Figure8A_3aTPPprocesed <- readRDS("~/MSstatsThermalProfiler/vignettes/Dataset_3b_OnePot/Figure8A_3aTPPprocesed.RDS")
+
+
+Figure8A_3aMSstatsTMTprocesed <- readRDS("~/MSstatsThermalProfiler/vignettes/Dataset_3b_OnePot/Figure8A_3aMSstatsTMTprocesed.RDS")
 
 Benchmarks_external<-append(list("3a: TPP proc.
-MSstatsTMT stat. mod."=MSstatsTMTstatmodel_TPPprocesed$`MSstatsTMT stat. model`),list(
+MSstatsTMT stat. mod."=Figure8A_3aTPPprocesed$`MSstatsTMT temp.`),list(
   "Reference Set"=na.omit(kinases$Accession),
-  "3a MSstatsTMT proc.
- MSstatsTMT stat. mod."=MSstatsTMTproc.MSstatsTMTstatmodel))
-
-png(filename = "VennMSstatsTMT_Fulltemp_vs_OnePot_PD_levelproc_onePot_unique_Median.png",
+  "3a: MSstatsTMT proc.
+ MSstatsTMT stat. mod."=Figure8A_3aMSstatsTMTprocesed$`MSstatsTMT temp.`))
+library(ggvenn)
+Figure8A<-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#1d547a","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+png(filename = "Fig8A.png",
     width =12, height = 6, units = "in", pointsize = 14,
     res = 600,type ="cairo")  
 
-library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#1d547a","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
+
+Figure8A
 
 dev.off() 
 ```
@@ -344,15 +356,15 @@ dev.off()
 Benchmarks_external<-append(list("3b: PD protein summary
 MSstatsTMT stat. mod."=PD_Proteinproc_OnePot),list(
   "Reference Set"=na.omit(kinases$Accession),
-  "3a MSstatsTMT proc.
+  "3a: MSstatsTMT proc.
  OnePot MSstatsTMT stat. mod."=MSstat_hits))
-
+library(ggvenn)
+Figure8D<-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#1d547a","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
 png(filename = "VennMSstatsTMT_OnePot_PD_levelproc_onePot_unique_Median.png",
     width =12, height = 6, units = "in", pointsize = 14,
     res = 600,type ="cairo")  
+Figure8D
 
-library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#1d547a","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
 
 dev.off() 
 ```

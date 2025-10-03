@@ -213,13 +213,13 @@ MSstatsTMT stat. mod."=TPPcurve_TPPprocesed$`MSstatsTMT temp.`),list(
                          "3b: PD protein summary 
   OnePotMSstatsTMT stat. mod."=MSstat_hits))
 
+
+library(ggvenn)
+Figure8A<-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
 png(filename = "VennMSstatsTMT_Fulltemp_vs_OnePot_TPPproc.png",
     width =12, height = 6, units = "in", pointsize = 12,
     res = 600,type ="cairo")  
-
-library(ggvenn)
-ggvenn::ggvenn(data=Benchmarks_external,fill_color =c("#2c7fb8","#7b057b","#1d547a"),set_name_size=5,text_size=8,stroke_size=1.5,fill_alpha = 0.6,show_percentage = FALSE)+theme(text=element_text(size=20))+coord_cartesian(ylim = c(-2,2),xlim = c(-4,4))
-
+Figure8A
 dev.off() 
 
 saveRDS(MSstat_hits,"PD_Proteinproc_OnePot.RDS")
@@ -228,16 +228,32 @@ saveRDS(MSstat_hits,"PD_Proteinproc_OnePot.RDS")
 #I. Figure 8, panel E: profile plots for MEK2
 
 ```{r}
-MEK2<-MSstats_input$ProteinLevelData|>dplyr::filter(Protein=="P36507")|>dplyr::group_split(Condition)
-MEK2_renamed<-lapply(MEK2,function(x) {
+MEK2<-MSstats_input$ProteinLevelData|>
+  dplyr::filter(Protein=="P36507")|>
+  dplyr::mutate(Condition=as.factor(Condition))|>
+  dplyr::group_split(Condition)
+MEK2_renamedProtein<-lapply(MEK2,function(x) {
   x$Condition<-as.character(x$Condition)
   x$Condition<-ifelse(x$Condition=="DMSO","00xDMSO",x$Condition)
   x$Condition<-ifelse(x$Condition=="1xstauro","01xstauro",x$Condition)
   x$Condition<-ifelse(x$Condition=="5xstauro","05xstauro",x$Condition)
   x$Condition<-ifelse(x$Condition=="10xstauro","10xstauro",x$Condition)
   x$Condition<-ifelse(x$Condition=="25xstauro","25xstauro",x$Condition)
-                            return(x)})|>dplyr::bind_rows()
-ggplot(MEK2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_point()+ylab(expression(log[2]~Abundance))
+  x$Condition <- factor(x$Condition, levels = c(
+    "00xDMSO", "01xstauro", "05xstauro", "10xstauro", "25xstauro"))
+                            return(x)})|>
+  dplyr::bind_rows()
+
+
+MEK2_renamed<-list(ProteinLevelData=MEK2_renamedProtein,FeatureLevelData=MEK2_renamedProtein)
+P36507<-MSstatsTMT::dataProcessPlotsTMT(MEK2_renamed,type="PROFILEPLOT",which.Protein="P36507",address=FALSE)
+
+P36507<-P36507+theme(text=element_text(size=40))
+
+ggsave(filename = "OnePotPDprotein_P36507profile.png",
+    width =12, height = 12, units = "in", pointsize = 40,
+    dpi = 600,type ="cairo")  
+Figure8<- ggplot(MEK2_renamed,mapping=aes(x=Condition,y=Abundance,color=Condition))+geom_point()+ylab(expression(log[2]~Abundance))
 
 ```
 

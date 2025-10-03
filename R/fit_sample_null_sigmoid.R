@@ -11,8 +11,14 @@ fit_sample_null_sigmoid = function(){
       call. = FALSE
     )
   }
+  # Locate the Stan file using system.file()
+  stan_file <- system.file(
+    "stan", "sigmoid_null_model.stan", package = "MSstatsThermalProfiler"
+  )
 
-  sigmoid_stanmod = rstan::stan_model("R/sigmoid_null_model.stan")
+  # Call your Stan function with `stan_file`
+
+  sigmoid_stanmod = rstan::stan_model(stan_file)
   print("Loaded Sample Sigmoid Model, beginning fitting to sample O00267 Human data")
 
 
